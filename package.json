@@ -1,0 +1,45 @@
+{
+  "name": "sunwallet-contracts",
+  "version": "1.0.0",
+  "description": "The smart contracts eco-system for Sun-Wallet application",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test",
+    "compile": "truffle compile",
+    "migrate": "truffle migrate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swcapital/sunwallet-contracts.git"
+  },
+  "keywords": [
+    "smart",
+    "contracts",
+    "ethereum",
+    "solidity",
+    "meta",
+    "transactions",
+    "gas",
+    "less",
+    "erc20",
+    "ethereum",
+    "tokens",
+    "vesting",
+    "contract"
+  ],
+  "author": "Ararat Tonoyan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/swcapital/sunwallet-contracts/issues"
+  },
+  "homepage": "https://github.com/swcapital/sunwallet-contracts#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.1.0",
+    "chai": "^4.2.0",
+    "openzeppelin-test-helpers": "^0.5.1",
+    "truffle": "^5.1.40"
+  }
+}
