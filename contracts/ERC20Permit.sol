@@ -7,7 +7,11 @@ contract ERC20Permit is ERC20 {
   bytes32 private _DOMAIN_SEPARATOR;
   bytes32 private constant _PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
-  mapping(address => uint256) public _nonces;
+  mapping(address => uint256) private _nonces;
+
+  // -----------------------------------------
+  // CONSTRUCTOR
+  // -----------------------------------------
 
   constructor (string memory name, string memory symbol) internal ERC20(name, symbol) {
     uint chainId;
@@ -26,7 +30,9 @@ contract ERC20Permit is ERC20 {
     );
   }
 
-  // Approve by signature
+  // -----------------------------------------
+  // SETTERS
+  // -----------------------------------------
 
   function permit(
     address owner,
@@ -40,6 +46,7 @@ contract ERC20Permit is ERC20 {
     external
   {
     require(deadline >= block.timestamp, 'permit: expired permit tx');
+
     bytes32 digest = keccak256(
       abi.encodePacked(
         '\x19\x01',
@@ -54,7 +61,11 @@ contract ERC20Permit is ERC20 {
     _approve(owner, spender, value);
   }
 
-  function getNonce(address user) public view returns (uint256 nonce) {
-    nonce = _nonces[user];
+  // -----------------------------------------
+  // GETTERS
+  // -----------------------------------------
+
+  function nonce(address user) external view returns (uint256 n) {
+    n = _nonces[user];
   }
 }
