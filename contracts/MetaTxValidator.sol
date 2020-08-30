@@ -6,18 +6,31 @@ import "./IPermitERC20.sol";
 import "./EIP712MetaTransaction.sol";
 
 
-contract MetaContract is EIP712MetaTransaction, Ownable {
+contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   using SafeERC20 for IPermitERC20;
 
   bool private _isPaused;
   uint256 private _necessarySunCoins;
 
-  mapping (address => bool) private _senderAllowedForMeta;
+  mapping (address => bool) private _senderBlockedForMeta;
 
   IPermitERC20 private _sunCoin;
 
-  modifier notPaused() {
-    require(_isPaused == false, "notPaused: meta transactions paused!");
+  modifier metaTxValidation(address signer, uint256 amount, IPermitERC20 token) {
+    require(_isPaused == false, "metaTxValidation: meta transactions paused!");
+    require(_senderAllowed(signer), "metaTxValidation: not allowed for meta transfers.");
+    require(_hasEnoughSunTokens(signer), 'metaTxValidation: invalid sender address.');
+    require(_tokensApproved(signer, amount, token), 'metaTxValidation: tokens are blocked.');
+    require(_hasEnoughPairToken(signer, amount, token), 'metaTxValidation: user has not enough tokens.');
+    _;
+  }
+
+  modifier permitTxValidation(address signer, address owner, IPermitERC20 token) {
+    require(signer == owner, "permitTxValidation: signer is not the owner!");
+    require(_isPaused == false, "permitTxValidation: meta transactions paused!");
+    require(_senderAllowed(signer), "permitTxValidation: not allowed for meta transfers.");
+    require(_hasEnoughSunTokens(signer), 'permitTxValidation: invalid sender address.');
+    require(_tokensNotApproved(signer, token), 'permitTxValidation: tokens are blocked.');
     _;
   }
 
@@ -51,8 +64,8 @@ contract MetaContract is EIP712MetaTransaction, Ownable {
     _isPaused = isPaused;
   }
 
-  function toggleSenderAccessForMeta(address sender, bool isAllowed) external onlyOwner {
-    _senderAllowedForMeta[sender] = isAllowed;
+  function toggleSenderAccessForMeta(address sender, bool isBlocked) external onlyOwner {
+    _senderBlockedForMeta[sender] = isBlocked;
   }
 
   function setSunCoinAddress(IPermitERC20 sunCoin) external onlyOwner {
@@ -69,15 +82,9 @@ contract MetaContract is EIP712MetaTransaction, Ownable {
     IPermitERC20 token
   )
     external
-    notPaused
+    metaTxValidation(msgSender(), amount, token)
   {
-    address from = msgSender();
-
-    require(_senderAllowed(from), "tokenTransfer: not allowed for meta transfers.");
-    require(_hasEnoughSunTokens(from), 'tokenTransfer: invalid sender address.');
-    require(_tokensApproved(from, amount, token), 'tokenTransfer: tokens already approved.');
-
-    token.safeTransferFrom(from, to, amount);
+    token.safeTransferFrom(msgSender(), to, amount);
   }
 
   function tokenPermit(
@@ -91,14 +98,8 @@ contract MetaContract is EIP712MetaTransaction, Ownable {
     IPermitERC20 token
   )
     external
-    notPaused
+    permitTxValidation(msgSender(), owner, token)
   {
-    address from = msgSender();
-
-    require(_senderAllowed(from), "tokenPermit: not allowed for meta transfers.");
-    require(_hasEnoughSunTokens(from), 'tokenPermit: invalid sender address.');
-    require(_tokensNotApproved(from, token), 'tokenPermit: tokens already approved.');
-
     token.permit(owner, spender, value, deadline, v, r, s);
   }
 
@@ -107,11 +108,16 @@ contract MetaContract is EIP712MetaTransaction, Ownable {
   // -----------------------------------------
 
   function _senderAllowed(address sender) private view returns (bool) {
-    return sender != address(0) && _senderAllowedForMeta[sender];
+    return sender != address(0) && _senderBlockedForMeta[sender] == false;
   }
 
   function _hasEnoughSunTokens(address sender) private view returns (bool) {
     return _sunCoin.balanceOf(sender) >= _necessarySunCoins;
+  }
+
+  function _hasEnoughPairToken(address sender, uint256 amount, IPermitERC20 token) private view returns (bool) {
+    uint256 balance = token.balanceOf(sender);
+    return balance >= amount;
   }
 
   function _tokensApproved(address sender, uint256 amount, IPermitERC20 token) private view returns (bool) {
