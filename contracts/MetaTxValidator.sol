@@ -1,14 +1,12 @@
 pragma solidity =0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./IPermitERC20.sol";
+import "./TransferHelper.sol";
 import "./EIP712MetaTransaction.sol";
 
 
 contract MetaTxValidator is EIP712MetaTransaction, Ownable {
-  using SafeERC20 for IPermitERC20;
-
   bool private _isPaused;
   uint256 private _necessarySunCoins;
 
@@ -16,19 +14,21 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
 
   IPermitERC20 private _sunCoin;
 
-  modifier metaTxValidation(address signer, uint256 amount, IPermitERC20 token) {
+  modifier metaTxValidation(address signer, uint256 amount, address token) {
+    require(signer != address(0) && address(token) != address(0), "permitTxValidation: invalid addresses.");
     require(_isPaused == false, "metaTxValidation: meta transactions paused!");
-    require(_senderAllowed(signer), "metaTxValidation: not allowed for meta transfers.");
+    require(!_senderBlocked(signer), "metaTxValidation: not allowed for meta transfers.");
     require(_hasEnoughSunTokens(signer), 'metaTxValidation: invalid sender address.');
     require(_tokensApproved(signer, amount, token), 'metaTxValidation: tokens are blocked.');
     require(_hasEnoughPairToken(signer, amount, token), 'metaTxValidation: user has not enough tokens.');
     _;
   }
 
-  modifier permitTxValidation(address signer, address owner, IPermitERC20 token) {
+  modifier permitTxValidation(address signer, address owner, address token) {
+    require(signer != address(0) && address(token) != address(0), "permitTxValidation: invalid addresses.");
     require(signer == owner, "permitTxValidation: signer is not the owner!");
     require(_isPaused == false, "permitTxValidation: meta transactions paused!");
-    require(_senderAllowed(signer), "permitTxValidation: not allowed for meta transfers.");
+    require(!_senderBlocked(signer), "permitTxValidation: not allowed for meta transfers.");
     require(_hasEnoughSunTokens(signer), 'permitTxValidation: invalid sender address.');
     require(_tokensNotApproved(signer, token), 'permitTxValidation: tokens are blocked.');
     _;
@@ -38,18 +38,10 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   // CONSTRUCTOR
   // -----------------------------------------
 
-  constructor (IPermitERC20 sunCoin) public {
-    require(address(sunCoin) != address(0), "MetaContract: the sun coin address can not be zero address!");
+  constructor (address sunCoin) internal {
+    require(sunCoin != address(0), "MetaContract: the sun coin address can not be zero address!");
 
-    _sunCoin = sunCoin;
-  }
-
-  receive () external payable {
-    // silence
-  }
-
-  fallback () external {
-    // silence
+    _sunCoin = IPermitERC20(sunCoin);
   }
 
   // -----------------------------------------
@@ -68,8 +60,8 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     _senderBlockedForMeta[sender] = isBlocked;
   }
 
-  function setSunCoinAddress(IPermitERC20 sunCoin) external onlyOwner {
-    _sunCoin = sunCoin;
+  function setSunCoinAddress(address sunCoin) external onlyOwner {
+    _sunCoin = IPermitERC20(sunCoin);
   }
 
   // -----------------------------------------
@@ -79,12 +71,12 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   function tokenTransfer(
     address to,
     uint256 amount,
-    IPermitERC20 token
+    address token
   )
     external
     metaTxValidation(msgSender(), amount, token)
   {
-    token.safeTransferFrom(msgSender(), to, amount);
+    TransferHelper.safeTransferFrom(token, msgSender(), to, amount);
   }
 
   function tokenPermit(
@@ -95,38 +87,38 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     uint8 v,
     bytes32 r,
     bytes32 s,
-    IPermitERC20 token
+    address token
   )
     external
     permitTxValidation(msgSender(), owner, token)
   {
-    token.permit(owner, spender, value, deadline, v, r, s);
+    IPermitERC20(token).permit(owner, spender, value, deadline, v, r, s);
   }
 
   // -----------------------------------------
   // INTERNAL
   // -----------------------------------------
 
-  function _senderAllowed(address sender) private view returns (bool) {
-    return sender != address(0) && _senderBlockedForMeta[sender] == false;
+  function _senderBlocked(address sender) private view returns (bool) {
+    return _senderBlockedForMeta[sender];
   }
 
   function _hasEnoughSunTokens(address sender) private view returns (bool) {
     return _sunCoin.balanceOf(sender) >= _necessarySunCoins;
   }
 
-  function _hasEnoughPairToken(address sender, uint256 amount, IPermitERC20 token) private view returns (bool) {
-    uint256 balance = token.balanceOf(sender);
+  function _hasEnoughPairToken(address sender, uint256 amount, address token) private view returns (bool) {
+    uint256 balance = IPermitERC20(token).balanceOf(sender);
     return balance >= amount;
   }
 
-  function _tokensApproved(address sender, uint256 amount, IPermitERC20 token) private view returns (bool) {
-    uint256 allowance = token.allowance(sender, address(this));
+  function _tokensApproved(address sender, uint256 amount, address token) private view returns (bool) {
+    uint256 allowance = IPermitERC20(token).allowance(sender, address(this));
     return allowance >= amount;
   }
 
-  function _tokensNotApproved(address sender, IPermitERC20 token) private view returns (bool) {
-    uint256 allowance = token.allowance(sender, address(this));
+  function _tokensNotApproved(address sender, address token) private view returns (bool) {
+    uint256 allowance = IPermitERC20(token).allowance(sender, address(this));
     return allowance == 0;
   }
 
@@ -138,15 +130,15 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     return _necessarySunCoins;
   }
 
-  function senderAllowed(address sender) external view returns (bool) {
-    return _senderAllowed(sender);
+  function senderBlocked(address sender) external view returns (bool) {
+    return _senderBlocked(sender);
   }
 
-  function tokensApproved(address sender, uint256 amount, IPermitERC20 token) external view returns (bool) {
+  function tokensApproved(address sender, uint256 amount, address token) external view returns (bool) {
     return _tokensApproved(sender, amount, token);
   }
 
-  function tokensNotApproved(address sender, IPermitERC20 token) external view returns (bool) {
+  function tokensNotApproved(address sender, address token) external view returns (bool) {
     return _tokensNotApproved(sender, token);
   }
 
