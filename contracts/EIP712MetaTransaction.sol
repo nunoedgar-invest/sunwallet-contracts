@@ -46,7 +46,7 @@ contract EIP712Base {
 
 }
 
-contract EIP712MetaTransaction is EIP712Base('Sun coin', '1') {
+contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     using SafeMath for uint256;
 
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
@@ -72,6 +72,8 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin', '1') {
         bytes32 sigS,
         uint8 sigV
     ) public payable returns (bytes memory) {
+        _preMetaTxValidation(userAddress);
+
         MetaTransaction memory metaTx = MetaTransaction({
             nonce: nonces[userAddress],
             from: userAddress,
@@ -120,4 +122,6 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin', '1') {
         }
         return sender;
     }
+
+    function _preMetaTxValidation(address sender) internal virtual { }
 }

@@ -15,21 +15,12 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   IPermitERC20 private _sunCoin;
 
   modifier metaTxValidation(address signer, uint256 amount, address token) {
-    require(signer != address(0) && address(token) != address(0), "permitTxValidation: invalid addresses.");
-    require(_isPaused == false, "metaTxValidation: meta transactions paused!");
-    require(!_senderBlocked(signer), "metaTxValidation: not allowed for meta transfers.");
-    require(_hasEnoughSunTokens(signer), 'metaTxValidation: invalid sender address.');
     require(_tokensApproved(signer, amount, token), 'metaTxValidation: tokens are blocked.');
     require(_hasEnoughPairToken(signer, amount, token), 'metaTxValidation: user has not enough tokens.');
     _;
   }
 
   modifier permitTxValidation(address signer, address owner, address token) {
-    require(signer != address(0) && address(token) != address(0), "permitTxValidation: invalid addresses.");
-    require(signer == owner, "permitTxValidation: signer is not the owner!");
-    require(_isPaused == false, "permitTxValidation: meta transactions paused!");
-    require(!_senderBlocked(signer), "permitTxValidation: not allowed for meta transfers.");
-    require(_hasEnoughSunTokens(signer), 'permitTxValidation: invalid sender address.');
     require(_tokensNotApproved(signer, token), 'permitTxValidation: tokens are blocked.');
     _;
   }
@@ -38,10 +29,8 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   // CONSTRUCTOR
   // -----------------------------------------
 
-  constructor (address sunCoin) internal {
-    require(sunCoin != address(0), "MetaContract: the sun coin address can not be zero address!");
-
-    _sunCoin = IPermitERC20(sunCoin);
+  constructor (address _sun) internal {
+    _sunCoin = IPermitERC20(_sun);
   }
 
   // -----------------------------------------
@@ -120,6 +109,16 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   function _tokensNotApproved(address sender, address token) private view returns (bool) {
     uint256 allowance = IPermitERC20(token).allowance(sender, address(this));
     return allowance == 0;
+  }
+
+  function _preMetaTxValidation(address sender) internal virtual override {
+    super._preMetaTxValidation(sender);
+
+
+    require(sender != address(0), "_preMetaTxValidation: invalid address.");
+    require(_isPaused == false, "_preMetaTxValidation: meta transactions paused!");
+    require(!_senderBlocked(sender), "_preMetaTxValidation: not allowed for meta transfers.");
+    require(_hasEnoughSunTokens(sender), '_preMetaTxValidation: invalid sender address.');
   }
 
   // -----------------------------------------
