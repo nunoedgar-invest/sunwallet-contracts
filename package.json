@@ -9,7 +9,8 @@
   "scripts": {
     "test": "truffle test",
     "compile": "truffle compile",
-    "migrate": "truffle migrate"
+    "migrate": "truffle migrate",
+    "flat": "truffle-flattener contracts/UniswapV2Router02.sol > flat/UniswapV2Router02.sol && truffle-flattener contracts/SunCoin.sol > flat/SunCoin.sol"
   },
   "repository": {
     "type": "git",
