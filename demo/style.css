@@ -246,17 +246,6 @@ select {
   -webkit-padding-start: 2px;
   -moz-padding-start: 2px;
   background-color: #dddddd;
-  /* Fallback color if gradients are not supported */
-  background-image: url(../images/select-arrow.png), -webkit-linear-gradient(top, #E5E5E5, #F4F4F4);
-  /* For Chrome and Safari */
-  background-image: url(../images/select-arrow.png), -moz-linear-gradient(top, #E5E5E5, #F4F4F4);
-  /* For old Firefox (3.6 to 15) */
-  background-image: url(../images/select-arrow.png), -ms-linear-gradient(top, #E5E5E5, #F4F4F4);
-  /* For pre-releases of Internet Explorer  10*/
-  background-image: url(../images/select-arrow.png), -o-linear-gradient(top, #E5E5E5, #F4F4F4);
-  /* For old Opera (11.1 to 12.0) */
-  background-image: url(../images/select-arrow.png), linear-gradient(to bottom, #E5E5E5, #F4F4F4);
-  /* Standard syntax; must be last */
   background-position: center right;
   background-repeat: no-repeat;
   border: 1px solid #AAA;
