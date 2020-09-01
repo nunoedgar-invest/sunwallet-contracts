@@ -1,9 +1,5 @@
 
-// File: @openzeppelin/contracts/GSN/Context.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
+pragma solidity =0.6.6;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -25,12 +21,6 @@ abstract contract Context {
         return msg.data;
     }
 }
-
-// File: @openzeppelin/contracts/access/Ownable.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -95,12 +85,6 @@ contract Ownable is Context {
         _owner = newOwner;
     }
 }
-
-// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -176,12 +160,6 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-// File: contracts/IPermitERC20.sol
-
-pragma solidity =0.6.6;
-
-
-
 interface IPermitERC20 is IERC20 {
     function burn(uint256 amount) external;
     function burnFrom(address account, uint256 amount) external;
@@ -192,11 +170,6 @@ interface IPermitERC20 is IERC20 {
 
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
 }
-
-// File: contracts/TransferHelper.sol
-
-pragma solidity =0.6.6;
-
 
 library TransferHelper {
     function safeApprove(address token, address to, uint value) internal {
@@ -222,12 +195,6 @@ library TransferHelper {
         require(success, 'TransferHelper: ETH_TRANSFER_FAILED');
     }
 }
-
-// File: @openzeppelin/contracts/math/SafeMath.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -385,12 +352,6 @@ library SafeMath {
     }
 }
 
-// File: contracts/EIP712MetaTransaction.sol
-
-pragma solidity =0.6.6;
-
-
-
 contract EIP712Base {
     struct EIP712Domain {
         string name;
@@ -513,15 +474,6 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
 
     function _preMetaTxValidation(address sender) internal virtual { }
 }
-
-// File: contracts/MetaTxValidator.sol
-
-pragma solidity =0.6.6;
-
-
-
-
-
 
 contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   bool private _isPaused;
@@ -666,12 +618,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     return _isPaused;
   }
 }
-
-// File: contracts/UniswapV2Router02.sol
-
-pragma solidity =0.6.6;
-
-
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);

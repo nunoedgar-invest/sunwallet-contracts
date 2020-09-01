@@ -1,8 +1,3 @@
-
-// File: @openzeppelin/contracts/GSN/Context.sol
-
-// SPDX-License-Identifier: MIT
-
 pragma solidity ^0.6.0;
 
 /*
@@ -25,12 +20,6 @@ abstract contract Context {
         return msg.data;
     }
 }
-
-// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -105,12 +94,6 @@ interface IERC20 {
      */
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
-
-// File: @openzeppelin/contracts/math/SafeMath.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -268,12 +251,6 @@ library SafeMath {
     }
 }
 
-// File: @openzeppelin/contracts/utils/Address.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.2;
-
 /**
  * @dev Collection of functions related to the address type
  */
@@ -411,16 +388,6 @@ library Address {
         }
     }
 }
-
-// File: @openzeppelin/contracts/token/ERC20/ERC20.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
-
-
-
-
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -721,14 +688,6 @@ contract ERC20 is Context, IERC20 {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 }
 
-// File: @openzeppelin/contracts/token/ERC20/ERC20Burnable.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
-
-
-
 /**
  * @dev Extension of {ERC20} that allows token holders to destroy both their own
  * tokens and those that they have an allowance for, in a way that can be
@@ -762,12 +721,6 @@ abstract contract ERC20Burnable is Context, ERC20 {
         _burn(account, amount);
     }
 }
-
-// File: contracts/ERC20Permit.sol
-
-pragma solidity =0.6.6;
-
-
 
 contract ERC20Permit is ERC20 {
   bytes32 private _DOMAIN_SEPARATOR;
@@ -835,13 +788,6 @@ contract ERC20Permit is ERC20 {
     n = _nonces[user];
   }
 }
-
-// File: contracts/SunCoin.sol
-
-pragma solidity =0.6.6;
-
-
-
 
 /**
  * @dev Implementation of the Sun Coin (SUN) ERC20 smart contract.
