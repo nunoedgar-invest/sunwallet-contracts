@@ -1,28 +1,15 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.moduleTry = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 let config = {};
 
-config.ropsten= {//addresses
- mDAI: '0x99c3C3C6E280f6aF1F3D22a5DAC6802A2814bc31',
-  mETH: '0x4BF793cc8b3488018CD6C182A6e179D130C99b92',
-  m0x: '0x84B177Faa14e4474dd3b74E9Ba97dB2E8Fe8FF4d',
-  MANA: '0x123fda699AFd052e3139E8Bc41B9fD4397489E5A',
-  mBTC: '0xBBde5bf52eEBca84386523BCeAD0B47013F4673f',
-  mUSDT: '0x9Cf8C345BF0a302c054df749968443F54fb4ea60',
-  factoryAddress: '0x63f8e81F4e7628eC441Bdf508B309EdAE4022c71',
-  routerAddress: '0x438697d6a5EB01f37B1599c82e9Dad56D9603658',
-  EIP712forwarderAddress: '0x062ECA08aE7441528a298b9D81aa23b4B6cad4E5'
+config.rinkeby= {
+  DAI: '0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735',
+  SUN: '0x05ef5e9A74FC07421e4ae3e37EE5C6EAe28183e8',
+  WETH: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
+  routerAddress: '0xd51EC68180F7334df4Eab701e1Ea3427fF6cB9aa',
+  EIP712forwarderAddress: '0x69CAa8A5677441757bFF62c2b8B94777fCa3744a'
 };
-config.matic={ //addresses
-  mDAI: '0xa7E3c50e1050b59c31415537e021e3F9615Cd8FA',
-  mETH: '0x2B11Af8a49877cC9becbDF29019Ec15Ed751b720',
-  m0x: '0xf87a725e3DE96B2f927f93294AaDaD22A5b4756f',
-  MANA: '0x10024660B4260Df5B893eD47732346e11DA6537f',
-  mBTC: '0xb99c4fed57Bf60Fd95ab104F10be8d31068B08AE',
-  mUSDT: '0xcbF95FaF80F52456cc7022a92B76BB46718d83A2',
-  factoryAddress: '0xBa3e4831f6600BEeeA8C0F9F59754d9afc07F570',
-  routerAddress: '0x95c3F714C93b67Dff2B530E467f8b05bA477ab50',
-  EIP712forwarderAddress: '0xe6c89dB2aDDd90546e78bA008E0bCF07e2257171' }
-//add routerABI and ForwarderAbi
+
+// Add routerABI and ForwarderAbi
 config.contract = {
   erc20ABI: [
     {
@@ -1387,8 +1374,7 @@ config.contract = {
   ]
 };
 
-module.exports = {config}
-
+module.exports = { config }
 },{}],2:[function(require,module,exports){
 const Web3 = require('web3')
 const Biconomy = require('@biconomy/mexa')
@@ -1442,36 +1428,20 @@ const domainDataERC20 = {
 }
 
 const showFaucetLink = function () {
-    if (networkName == 'ropsten') {
-        mDAILink = 'https://oneclickdapp.com/cecilia-crash/'
-        MANALink = 'https://oneclickdapp.com/velvet-papa/'
+    if (networkName == 'rinkeby') {
+      DAILink = 'https://rinkeby.etherscan.io/address/0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735#writeContract'
     }
-    if (networkName == 'matic') {
-        mDAILink = 'https://oneclickdapp.com/alias-type/'
-        MANALink = 'https://oneclickdapp.com/street-mineral/'
-    }
-    var a = document.createElement('a')
-    a.href = mDAILink
-    a.title = 'faucet'
-    a.target = '_blank'
-    var link = document.createTextNode('mDAI faucet')
-    a.appendChild(link)
 
-    var x = document.createElement('LABEL')
-    var t = document.createTextNode(
-        '  :mint yourself 10000000000000000000 to be equal to 10 (Because of decimals): This action is not gasless'
-    )
-    x.appendChild(t)
-    var a1 = document.createElement('a')
-    a1.href = MANALink
+    const x = document.createElement('LABEL')
+    const a1 = document.createElement('a')
+    a1.href = DAILink
     a1.title = 'faucet'
     a1.target = '_blank'
-    var link1 = document.createTextNode('MANA faucet')
+    const link1 = document.createTextNode('DAI faucet: mint yourself 100000000000000000000 (100 DAI)')
     a1.appendChild(link1)
     document.body.prepend(x)
-    var br = document.createElement('br')
+    const br = document.createElement('br')
     a1.appendChild(br)
-    document.body.prepend(a)
     document.body.prepend(a1)
 }
 
@@ -1486,7 +1456,6 @@ const forwarderEIP2585 = async function (_data) {
     var value = 0
     var chainId = await web3.eth.net.getId()
     var replayProtection = config[networkName].EIP712forwarderAddress
-    console.log(chainId)
     var batchId = 0
     var batchNonce = await EIP712ForwarderContract.methods
         .getNonce(signer, batchId)
@@ -1518,7 +1487,7 @@ const forwarderEIP2585 = async function (_data) {
         primaryType: 'MetaTransaction',
         message: forwardMessage,
     }
-    console.log(signatureData)
+
     var sigString = JSON.stringify(signatureData)
     web3.providers.HttpProvider.prototype.sendAsync =
         web3.providers.HttpProvider.prototype.send
@@ -1537,11 +1506,9 @@ const forwarderEIP2585 = async function (_data) {
             var signatureType = {
                 SignatureType: 0,
             }
-            console.log(forwardMessage)
+
             // var signatureType = 2;
             const signature = result.result
-            console.log(signature)
-
             let tx = EIP712ForwarderContract.methods
                 .forward(forwardMessage, 0, signature)
                 .send({ from: signer }, (err, res) => {
@@ -1553,12 +1520,8 @@ const forwarderEIP2585 = async function (_data) {
                 console.log(`Transaction hash is ${hash}`)
                 var a = document.createElement('a')
                 let tempString
-                if (networkName == 'ropsten') {
-                    tempString = 'https://ropsten.etherscan.io/tx/' + hash
-                }
-                if (networkName == 'matic') {
-                    tempString =
-                        'https://testnetv3-explorer.matic.network/tx/' + hash
+                if (networkName == 'rinkeby') {
+                    tempString = 'https://rinkeby.etherscan.io/tx/' + hash
                 }
                 a.href = tempString
                 a.title = tempString
@@ -1581,61 +1544,41 @@ const connectWallet = async function () {
         const provider = window['ethereum']
         let accounts = await provider.enable()
         document.getElementById('toWhom').value = accounts[0]
-        document.getElementById('toWhom1').value = accounts[0]
-        console.log(provider.networkVersion)
         var _chainId = provider.networkVersion
 
         //var chainId = parseInt(_chainId);
         domainDataERC20.chainId = _chainId
-        console.log(_chainId)
 
-        if (_chainId == 3) {
-            networkName = 'ropsten'
+        if (_chainId == 4) {
+          networkName = 'rinkeby'
+        } else {
+          alert("Please switch to Rinkeby network!")
+          return
         }
-        if (_chainId == 15001) {
-            networkName = 'matic'
-        }
+
         showFaucetLink()
         web3 = new Web3(provider)
-        if (networkName == 'ropsten') {
-            biconomy = new Biconomy(window.ethereum, {
-                apiKey: 'sdLlgS_TO.8a399db4-82ec-410c-897b-c77faab1ad1d',
-                debug: 'true',
-            })
-            web3 = new Web3(biconomy)
-            biconomy
-                .onEvent(biconomy.READY, async () => {
-                    console.log('hello')
+        if (networkName === 'rinkeby') {
+          biconomy = new Biconomy(window.ethereum, {
+            apiKey: 'sdLlgS_TO.8a399db4-82ec-410c-897b-c77faab1ad1d',
+            debug: 'true',
+        })
+          web3 = new Web3(biconomy)
+          biconomy
+          .onEvent(biconomy.READY, async () => {
+              //await justTrying();
+          })
+          .onEvent(biconomy.ERROR, (error, message) => {
+              console.log(error, message)
+          })
+        }
 
-                    //await justTrying();
-                })
-                .onEvent(biconomy.ERROR, (error, message) => {
-                    console.log(error)
-                })
-        }
-        if (networkName == 'matic') {
-            biconomy = new Biconomy(window.ethereum, {
-                apiKey: 'Q34QBan9O.1fb12039-9bbe-45d2-a1f9-22cbb2636fe9',
-                debug: 'true',
-            })
-            web3 = new Web3(biconomy)
-            biconomy
-                .onEvent(biconomy.READY, async () => {
-                    console.log('hello')
-                    //await justTrying();
-                })
-                .onEvent(biconomy.ERROR, (error, message) => {
-                    console.log(error)
-                })
-        }
         contract = new web3.eth.Contract(
             config.contract.routerABI,
             config[networkName].routerAddress
         )
-
-        //console.log(await contract.methods.getQuote().call());
     } else {
-        alert('Install meatamask first:  https://metamask.io/ ')
+        alert('Install Metamask first:  https://metamask.io/ ')
     }
 }
 
@@ -1668,13 +1611,10 @@ const sendPermitTransaction = async (
 ) => {
     if (web3 && erc20Contract) {
         try {
-            console.log('hi::::::::::')
             let gasLimit = await erc20Contract.methods
                 .permit(owner, spender, value, deadline, v, r, s)
                 .estimateGas({ from: owner })
             let gasPrice = await web3.eth.getGasPrice()
-            console.log(gasLimit)
-            console.log(gasPrice)
             let tx = erc20Contract.methods
                 .permit(owner, spender, value, deadline, v, r, s)
                 .send({
@@ -1688,7 +1628,6 @@ const sendPermitTransaction = async (
             }).once('confirmation', function (confirmationNumber, receipt) {
                 let elements = document.getElementsByClassName('loader')
                 elements[0].style.display = 'none'
-                console.log(receipt)
                 alert('tokens unlocked')
             })
         } catch (error) {
@@ -1703,8 +1642,7 @@ const getPermit = async function (token, _value) {
         config.contract.erc20ABI,
         config[networkName][token]
     )
-    console.log(config[networkName][token])
-    console.log(erc20Contract)
+
     let message = {}
     var userAddress = ethereum.selectedAddress
     var owner = userAddress
@@ -1732,7 +1670,6 @@ const getPermit = async function (token, _value) {
         message: message,
     }
     const sigString = JSON.stringify(dataToSign)
-    console.log(dataToSign)
 
     web3.currentProvider.send(
         {
@@ -1742,7 +1679,6 @@ const getPermit = async function (token, _value) {
             params: [userAddress, sigString],
         },
         function (error, response) {
-            console.log(response)
             let elements = document.getElementsByClassName('loader')
             elements[0].style.display = 'inline-block'
             let { r, s, v } = getSignatureParameters(response.result)
@@ -1823,21 +1759,17 @@ const getBalanceERC20 = async function (ERC20address, wadAddress) {
         ERC20address
     )
     let balance = await tempERC20Contract.methods.balanceOf(wadAddress).call()
-    // console.log(await ERC20Contract.methods.decimals().call());
-    console.log(balance)
-
     let balanceWithDecimals = web3.utils.fromWei(balance)
     return balanceWithDecimals
 }
 
 const getMax = async function (inputElementId, outputElementId) {
     let wadAddress = ethereum.selectedAddress
-    console.log(wadAddress)
     let inputToken = document.getElementById(inputElementId)
     let inputTokenName = inputToken.options[inputToken.selectedIndex].value
-    let inputTokenaddress = config[networkName][inputTokenName]
-    console.log(inputTokenaddress)
-    let balance = await getBalanceERC20(inputTokenaddress, wadAddress)
+    let inputTokenAddress = config[networkName][inputTokenName]
+
+    let balance = await getBalanceERC20(inputTokenAddress, wadAddress)
     document.getElementById(outputElementId).value = balance
 }
 
@@ -1847,7 +1779,6 @@ const swap = async function () {
     let outputToken = document.getElementById('outputToken')
     let outputTokenName = outputToken.options[outputToken.selectedIndex].value
     let toWhom = document.getElementById('toWhom').value
-    console.log(toWhom)
 
     let inputAmount = document.getElementById('input').value
     await swapExactTokensForTokens(
@@ -1872,11 +1803,7 @@ const getExchangeRate = async function () {
     let outputTokenName = outputToken.options[outputToken.selectedIndex].value
 
     let inputAmount = document.getElementById('input').value
-    console.log(inputTokenName)
-    console.log(outputTokenName)
-    console.log(inputAmount)
     let amountsInDecimals = web3.utils.toWei(inputAmount, 'ether')
-    console.log(amountsInDecimals)
 
     let amountsOutDecimals = await getAmountOut(
         amountsInDecimals,
@@ -1884,41 +1811,39 @@ const getExchangeRate = async function () {
         outputTokenName
     )
     let amountOut = web3.utils.fromWei(amountsOutDecimals, 'ether')
-    //  console.log(amountOut);
     document.getElementById('output').value = amountOut
 
     // // let amountsOut = web3.utils.fromWei(amountsOutDecimals,"ether");
-    // console.log(amountsOutDecimals.toString());
 }
 
-const addLiquidity = async function () {
-    let inputToken1 = document.getElementById('inputToken1')
-    let inputToken1Name = inputToken1.options[inputToken1.selectedIndex].value
-    let inputToken2 = document.getElementById('inputToken2')
-    let inputToken2Name = inputToken1.options[inputToken2.selectedIndex].value
+// const addLiquidity = async function () {
+//     let inputToken1 = document.getElementById('inputToken1')
+//     let inputToken1Name = inputToken1.options[inputToken1.selectedIndex].value
+//     let inputToken2 = document.getElementById('inputToken2')
+//     let inputToken2Name = inputToken1.options[inputToken2.selectedIndex].value
 
-    let inputAmount1 = document.getElementById('input1').value
-    let inputAmount2 = document.getElementById('input2').value
+//     let inputAmount1 = document.getElementById('input1').value
+//     let inputAmount2 = document.getElementById('input2').value
 
-    let toWhom = document.getElementById('toWhom1').value
-    let now = await getNow()
-    let expiry = now + 3600
-    console.log(toWhom)
+//     let toWhom = document.getElementById('toWhom1').value
+//     let now = await getNow()
+//     let expiry = now + 3600
+//     console.log(toWhom)
 
-    let data = contract.methods
-        .addLiquidity(
-            config[networkName][inputToken1Name],
-            config[networkName][inputToken2Name],
-            web3.utils.toWei(inputAmount1.toString(), 'ether'),
-            web3.utils.toWei(inputAmount2.toString(), 'ether'),
-            0,
-            0,
-            toWhom,
-            expiry
-        )
-        .encodeABI()
-    forwarderEIP2585(data)
-}
+//     let data = contract.methods
+//         .addLiquidity(
+//             config[networkName][inputToken1Name],
+//             config[networkName][inputToken2Name],
+//             web3.utils.toWei(inputAmount1.toString(), 'ether'),
+//             web3.utils.toWei(inputAmount2.toString(), 'ether'),
+//             0,
+//             0,
+//             toWhom,
+//             expiry
+//         )
+//         .encodeABI()
+//     forwarderEIP2585(data)
+// }
 
 // init();
 
@@ -1928,7 +1853,7 @@ var moduleTry = {
     swap,
     unlockToken,
     getMax,
-    addLiquidity,
+    // addLiquidity,
 }
 module.exports = moduleTry
 
