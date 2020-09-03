@@ -1,3 +1,8 @@
+
+// File: @openzeppelin/contracts/GSN/Context.sol
+
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.0;
 
 /*
@@ -20,6 +25,12 @@ abstract contract Context {
         return msg.data;
     }
 }
+
+// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -94,6 +105,12 @@ interface IERC20 {
      */
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
+
+// File: @openzeppelin/contracts/math/SafeMath.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -251,6 +268,12 @@ library SafeMath {
     }
 }
 
+// File: @openzeppelin/contracts/utils/Address.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
 /**
  * @dev Collection of functions related to the address type
  */
@@ -388,6 +411,16 @@ library Address {
         }
     }
 }
+
+// File: @openzeppelin/contracts/token/ERC20/ERC20.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+
+
+
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -688,6 +721,14 @@ contract ERC20 is Context, IERC20 {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 }
 
+// File: @openzeppelin/contracts/token/ERC20/ERC20Burnable.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+
+
 /**
  * @dev Extension of {ERC20} that allows token holders to destroy both their own
  * tokens and those that they have an allowance for, in a way that can be
@@ -722,9 +763,16 @@ abstract contract ERC20Burnable is Context, ERC20 {
     }
 }
 
+// File: contracts/ERC20Permit.sol
+
+pragma solidity =0.6.6;
+
+
+
 contract ERC20Permit is ERC20 {
   bytes32 private _DOMAIN_SEPARATOR;
-  bytes32 private constant _PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+  // bytes32 private constant _PERMIT_TYPEHASH = keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
+  bytes32 private constant _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
   mapping(address => uint256) private _nonces;
 
@@ -732,7 +780,7 @@ contract ERC20Permit is ERC20 {
   // CONSTRUCTOR
   // -----------------------------------------
 
-  constructor (string memory name, string memory symbol) internal ERC20(name, symbol) {
+  constructor (string memory name, string memory symbol, string memory version) internal ERC20(name, symbol) {
     uint chainId;
     assembly {
         chainId := chainid()
@@ -742,7 +790,7 @@ contract ERC20Permit is ERC20 {
       abi.encode(
         keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
         keccak256(bytes(name)),
-        keccak256(bytes('1')),
+        keccak256(bytes(version)),
         chainId,
         address(this)
       )
@@ -764,6 +812,7 @@ contract ERC20Permit is ERC20 {
   )
     external
   {
+    require(owner != address(0), 'permit: invalid holder address');
     require(deadline >= block.timestamp, 'permit: expired permit tx');
 
     bytes32 digest = keccak256(
@@ -784,22 +833,28 @@ contract ERC20Permit is ERC20 {
   // GETTERS
   // -----------------------------------------
 
-  function nonce(address user) external view returns (uint256 n) {
+  function nonces(address user) external view returns (uint256 n) {
     n = _nonces[user];
   }
 }
+
+// File: contracts/SunCoin.sol
+
+pragma solidity =0.6.6;
+
+
+
 
 /**
  * @dev Implementation of the Sun Coin (SUN) ERC20 smart contract.
  */
 contract SunCoin is ERC20Permit, ERC20Burnable {
-  uint256 private constant INITIAL_BALANCE = 100000000 ether;
+  string public constant NAME = 'Sun Coin';
+  string public constant SYMBOL = 'SUN';
+  string public constant VERSION = '1';
+  uint256 public constant INITIAL_BALANCE = 100000000 ether;
 
-  constructor (
-    string memory name,
-    string memory symbol,
-    address initialAccount
-  ) public ERC20Permit(name, symbol) {
+  constructor (address initialAccount) public ERC20Permit(NAME, SYMBOL, VERSION) {
     _mint(initialAccount, INITIAL_BALANCE);
   }
 }

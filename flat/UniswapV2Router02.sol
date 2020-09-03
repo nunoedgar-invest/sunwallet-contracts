@@ -1,5 +1,9 @@
 
-pragma solidity =0.6.6;
+// File: @openzeppelin/contracts/GSN/Context.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -21,6 +25,12 @@ abstract contract Context {
         return msg.data;
     }
 }
+
+// File: @openzeppelin/contracts/access/Ownable.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -85,6 +95,12 @@ contract Ownable is Context {
         _owner = newOwner;
     }
 }
+
+// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -160,6 +176,12 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
+// File: contracts/IPermitERC20.sol
+
+pragma solidity =0.6.6;
+
+
+
 interface IPermitERC20 is IERC20 {
     function burn(uint256 amount) external;
     function burnFrom(address account, uint256 amount) external;
@@ -168,8 +190,15 @@ interface IPermitERC20 is IERC20 {
     function PERMIT_TYPEHASH() external pure returns (bytes32);
     function nonces(address owner) external view returns (uint256);
 
+    // DAI
+    function permit(address owner, address spender, uint256 nonce, uint256 expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external;
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
 }
+
+// File: contracts/TransferHelper.sol
+
+pragma solidity =0.6.6;
+
 
 library TransferHelper {
     function safeApprove(address token, address to, uint value) internal {
@@ -195,6 +224,12 @@ library TransferHelper {
         require(success, 'TransferHelper: ETH_TRANSFER_FAILED');
     }
 }
+
+// File: @openzeppelin/contracts/math/SafeMath.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -352,6 +387,12 @@ library SafeMath {
     }
 }
 
+// File: contracts/EIP712MetaTransaction.sol
+
+pragma solidity =0.6.6;
+
+
+
 contract EIP712Base {
     struct EIP712Domain {
         string name;
@@ -399,7 +440,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     using SafeMath for uint256;
 
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
-    mapping(address => uint256) nonces;
+    mapping(address => uint256) private _nonces;
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
 
@@ -424,7 +465,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         _preMetaTxValidation(userAddress);
 
         MetaTransaction memory metaTx = MetaTransaction({
-            nonce: nonces[userAddress],
+            nonce: _nonces[userAddress],
             from: userAddress,
             functionSignature: functionSignature
         });
@@ -434,7 +475,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
         require(success, "Function call not successful");
 
-        nonces[userAddress] = nonces[userAddress].add(1);
+        _nonces[userAddress] = _nonces[userAddress].add(1);
 
         emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
 
@@ -450,8 +491,8 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         ));
 	  }
 
-    function getNonce(address user) public view returns(uint256 nonce) {
-        nonce = nonces[user];
+    function nonces(address user) public view returns(uint256 n) {
+        n = _nonces[user];
     }
 
     function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
@@ -475,6 +516,15 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     function _preMetaTxValidation(address sender) internal virtual { }
 }
 
+// File: contracts/MetaTxValidator.sol
+
+pragma solidity =0.6.6;
+
+
+
+
+
+
 contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   bool private _isPaused;
   uint256 private _necessarySunCoins;
@@ -486,11 +536,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   modifier metaTxValidation(address signer, uint256 amount, address token) {
     require(_tokensApproved(signer, amount, token), 'metaTxValidation: tokens are blocked.');
     require(_hasEnoughPairToken(signer, amount, token), 'metaTxValidation: user has not enough tokens.');
-    _;
-  }
-
-  modifier permitTxValidation(address signer, address owner, address token) {
-    require(_tokensNotApproved(signer, token), 'permitTxValidation: tokens are blocked.');
     _;
   }
 
@@ -537,22 +582,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     TransferHelper.safeTransferFrom(token, msgSender(), to, amount);
   }
 
-  function tokenPermit(
-    address spender,
-    address owner,
-    uint256 value,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s,
-    address token
-  )
-    external
-    permitTxValidation(msgSender(), owner, token)
-  {
-    IPermitERC20(token).permit(owner, spender, value, deadline, v, r, s);
-  }
-
   // -----------------------------------------
   // INTERNAL
   // -----------------------------------------
@@ -575,18 +604,12 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     return allowance >= amount;
   }
 
-  function _tokensNotApproved(address sender, address token) private view returns (bool) {
-    uint256 allowance = IPermitERC20(token).allowance(sender, address(this));
-    return allowance == 0;
-  }
-
   function _preMetaTxValidation(address sender) internal virtual override {
     super._preMetaTxValidation(sender);
 
-
-    require(sender != address(0), "_preMetaTxValidation: invalid address.");
-    require(_isPaused == false, "_preMetaTxValidation: meta transactions paused!");
-    require(!_senderBlocked(sender), "_preMetaTxValidation: not allowed for meta transfers.");
+    require(sender != address(0), '_preMetaTxValidation: invalid address.');
+    require(!_isPaused, '_preMetaTxValidation: meta transactions paused!');
+    require(!_senderBlocked(sender), '_preMetaTxValidation: not allowed for meta transfers.');
     require(_hasEnoughSunTokens(sender), '_preMetaTxValidation: invalid sender address.');
   }
 
@@ -606,10 +629,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     return _tokensApproved(sender, amount, token);
   }
 
-  function tokensNotApproved(address sender, address token) external view returns (bool) {
-    return _tokensNotApproved(sender, token);
-  }
-
   function sunCoin() external view returns (address) {
     return address(_sunCoin);
   }
@@ -618,6 +637,12 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     return _isPaused;
   }
 }
+
+// File: contracts/UniswapV2Router02.sol
+
+pragma solidity =0.6.6;
+
+
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -655,6 +680,7 @@ interface IUniswapV2Pair {
     function nonces(address owner) external view returns (uint);
 
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
+    function permit(address owner, address spender, uint nonce, uint expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external;
 
     event Mint(address indexed sender, uint amount0, uint amount1);
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);

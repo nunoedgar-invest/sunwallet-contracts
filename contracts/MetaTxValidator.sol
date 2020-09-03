@@ -1,9 +1,9 @@
 pragma solidity =0.6.6;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./IPermitERC20.sol";
-import "./TransferHelper.sol";
-import "./EIP712MetaTransaction.sol";
+import '@openzeppelin/contracts/access/Ownable.sol';
+import './IPermitERC20.sol';
+import './TransferHelper.sol';
+import './EIP712MetaTransaction.sol';
 
 
 contract MetaTxValidator is EIP712MetaTransaction, Ownable {
@@ -17,11 +17,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
   modifier metaTxValidation(address signer, uint256 amount, address token) {
     require(_tokensApproved(signer, amount, token), 'metaTxValidation: tokens are blocked.');
     require(_hasEnoughPairToken(signer, amount, token), 'metaTxValidation: user has not enough tokens.');
-    _;
-  }
-
-  modifier permitTxValidation(address signer, address owner, address token) {
-    require(_tokensNotApproved(signer, token), 'permitTxValidation: tokens are blocked.');
     _;
   }
 
@@ -68,22 +63,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     TransferHelper.safeTransferFrom(token, msgSender(), to, amount);
   }
 
-  function tokenPermit(
-    address spender,
-    address owner,
-    uint256 value,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s,
-    address token
-  )
-    external
-    permitTxValidation(msgSender(), owner, token)
-  {
-    IPermitERC20(token).permit(owner, spender, value, deadline, v, r, s);
-  }
-
   // -----------------------------------------
   // INTERNAL
   // -----------------------------------------
@@ -106,18 +85,12 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
     return allowance >= amount;
   }
 
-  function _tokensNotApproved(address sender, address token) private view returns (bool) {
-    uint256 allowance = IPermitERC20(token).allowance(sender, address(this));
-    return allowance == 0;
-  }
-
   function _preMetaTxValidation(address sender) internal virtual override {
     super._preMetaTxValidation(sender);
 
-
-    require(sender != address(0), "_preMetaTxValidation: invalid address.");
-    require(_isPaused == false, "_preMetaTxValidation: meta transactions paused!");
-    require(!_senderBlocked(sender), "_preMetaTxValidation: not allowed for meta transfers.");
+    require(sender != address(0), '_preMetaTxValidation: invalid address.');
+    require(!_isPaused, '_preMetaTxValidation: meta transactions paused!');
+    require(!_senderBlocked(sender), '_preMetaTxValidation: not allowed for meta transfers.');
     require(_hasEnoughSunTokens(sender), '_preMetaTxValidation: invalid sender address.');
   }
 
@@ -135,10 +108,6 @@ contract MetaTxValidator is EIP712MetaTransaction, Ownable {
 
   function tokensApproved(address sender, uint256 amount, address token) external view returns (bool) {
     return _tokensApproved(sender, amount, token);
-  }
-
-  function tokensNotApproved(address sender, address token) external view returns (bool) {
-    return _tokensNotApproved(sender, token);
   }
 
   function sunCoin() external view returns (address) {

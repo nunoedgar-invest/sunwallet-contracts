@@ -50,7 +50,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     using SafeMath for uint256;
 
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
-    mapping(address => uint256) nonces;
+    mapping(address => uint256) private _nonces;
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
 
@@ -75,7 +75,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         _preMetaTxValidation(userAddress);
 
         MetaTransaction memory metaTx = MetaTransaction({
-            nonce: nonces[userAddress],
+            nonce: _nonces[userAddress],
             from: userAddress,
             functionSignature: functionSignature
         });
@@ -85,7 +85,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
         require(success, "Function call not successful");
 
-        nonces[userAddress] = nonces[userAddress].add(1);
+        _nonces[userAddress] = _nonces[userAddress].add(1);
 
         emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
 
@@ -101,8 +101,8 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         ));
 	  }
 
-    function getNonce(address user) public view returns(uint256 nonce) {
-        nonce = nonces[user];
+    function nonces(address user) public view returns(uint256 n) {
+        n = _nonces[user];
     }
 
     function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {

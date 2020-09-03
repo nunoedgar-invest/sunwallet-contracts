@@ -1,11 +1,12 @@
 pragma solidity =0.6.6;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 
 contract ERC20Permit is ERC20 {
   bytes32 private _DOMAIN_SEPARATOR;
-  bytes32 private constant _PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+  // bytes32 private constant _PERMIT_TYPEHASH = keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
+  bytes32 private constant _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
   mapping(address => uint256) private _nonces;
 
@@ -13,7 +14,7 @@ contract ERC20Permit is ERC20 {
   // CONSTRUCTOR
   // -----------------------------------------
 
-  constructor (string memory name, string memory symbol) internal ERC20(name, symbol) {
+  constructor (string memory name, string memory symbol, string memory version) internal ERC20(name, symbol) {
     uint chainId;
     assembly {
         chainId := chainid()
@@ -23,7 +24,7 @@ contract ERC20Permit is ERC20 {
       abi.encode(
         keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
         keccak256(bytes(name)),
-        keccak256(bytes('1')),
+        keccak256(bytes(version)),
         chainId,
         address(this)
       )
@@ -45,6 +46,7 @@ contract ERC20Permit is ERC20 {
   )
     external
   {
+    require(owner != address(0), 'permit: invalid holder address');
     require(deadline >= block.timestamp, 'permit: expired permit tx');
 
     bytes32 digest = keccak256(
@@ -65,7 +67,7 @@ contract ERC20Permit is ERC20 {
   // GETTERS
   // -----------------------------------------
 
-  function nonce(address user) external view returns (uint256 n) {
+  function nonces(address user) external view returns (uint256 n) {
     n = _nonces[user];
   }
 }
