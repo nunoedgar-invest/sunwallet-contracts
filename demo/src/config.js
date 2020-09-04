@@ -1,28 +1,75 @@
-const { sunAbi, daiAbi, routerAbi } = require('./Abi')
+const { sunAbi, daiAbi, routerAbi } = require('./abi')
 
 export const config = {
   'sun': {
     name: 'Sun Coin',
     symbol: 'SUN',
-    address: '0xACB75f33BF55CB5420aE442c620419f6a961175d',
-    abi: sunAbi
+    version: '1',
+    address: '0x7af250981432eeda34a20fc47372971b26684942',
+    abi: sunAbi,
+    dappId: 'a0fbad38-a931-4800-91dd-7dab56b4b790'
   },
   'dai': {
     name: 'Dai Stablecoin',
     symbol: 'DAI',
+    version: '1',
     address: '0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735',
-    abi: daiAbi
+    abi: daiAbi,
+    dappId: '5b765421-fc7b-4493-a28d-105f96cef389'
   },
   'router': {
     name: 'Sun coin proxy',
+    version: '1',
     address: '0xD4aecf650c2c9A0d4E2BF08Fd10268CA1e199fcD',
     abi: routerAbi
   }
 }
 
-export const biconomyApi = 'N_qQS71U1.065ae611-a407-4545-ad5b-392a3a149bda'
+export const biconomyApiKey = 'WotnWP9Mu.96788423-9366-475c-9670-4c0915245589'
+export const biconomyUrl = 'https://api.biconomy.io/api/v2/meta-tx/native'
+
+export const MAX_UINT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 export const selectedNetwork = {
   id: '4',
   title: 'Rinkeby'
 }
+
+export const domainType = [
+  { name: 'name', type: 'string' },
+  { name: 'version', type: 'string' },
+  { name: 'chainId', type: 'uint256' },
+  { name: 'verifyingContract', type: 'address' },
+]
+
+export const permitType = [
+  { name: 'owner', type: 'address' },
+  { name: 'spender', type: 'address' },
+  { name: 'value', type: 'uint256' },
+  { name: 'nonce', type: 'uint256' },
+  { name: 'deadline', type: 'uint256' },
+]
+
+export const daiPermitType = [
+  { name: 'holder', type: 'address' },
+  { name: 'spender', type: 'address' },
+  { name: 'nonce', type: 'uint256' },
+  { name: 'expiry', type: 'uint256' },
+  { name: 'allowed', type: 'bool' },
+]
+
+export const domainTypeEIP2585 = [
+  { name: 'name', type: 'string' },
+  { name: 'version', type: 'string' },
+]
+
+export const MetaTransactionType = [
+  { name: 'from', type: 'address' },
+  { name: 'to', type: 'address' },
+  { name: 'value', type: 'uint256' },
+  { name: 'chainId', type: 'uint256' },
+  { name: 'replayProtection', type: 'address' },
+  { name: 'nonce', type: 'bytes' },
+  { name: 'data', type: 'bytes' },
+  { name: 'innerMessageHash', type: 'bytes32' },
+]

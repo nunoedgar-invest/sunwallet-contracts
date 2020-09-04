@@ -1,6 +1,6 @@
 const Web3 = require('web3')
 const Biconomy = require('@biconomy/mexa')
-const { biconomyApi, selectedNetwork } = require('./config')
+const { biconomyApiKey, selectedNetwork } = require('./config')
 
 export const connectWallet = async () => {
   if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
@@ -14,18 +14,17 @@ export const connectWallet = async () => {
     }
 
     const biconomy = new Biconomy(provider, {
-      apiKey: biconomyApi,
-      debug: 'true',
+      apiKey: biconomyApiKey,
+      debug: true
     })
 
     const web3 = new Web3(biconomy)
+    // Update the window web3 to Biconomy web3
+    window.web3 = web3
+
     return new Promise((resolve, reject) => {
-      biconomy.onEvent(biconomy.READY, async () => {
-        resolve({
-          web3,
-          chainId,
-          account: accounts[0],
-        })
+      biconomy.onEvent(biconomy.READY, () => {
+        resolve(accounts[0])
       }).onEvent(biconomy.ERROR, (error, message) => {
         reject({
           error,
@@ -35,5 +34,17 @@ export const connectWallet = async () => {
     })
   } else {
     throw new Error('Install Metamask extension first: https://metamask.io/')
+  }
+}
+
+export const getTxUrl = (txHash) => {
+  const chainId = window.web3.currentProvider.networkVersion.toString()
+  switch (chainId) {
+    case '4':
+      return `https://rinkeby.etherscan.io/tx/${txHash}`
+      break;
+
+    default:
+      break;
   }
 }

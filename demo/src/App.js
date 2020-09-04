@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Card,
   FormControl,
-  FormLabel,
   Button,
   Radio,
   RadioGroup,
@@ -16,34 +15,27 @@ import {
   Toolbar,
 } from '@material-ui/core'
 
-
-import { connectWallet } from './web3Utils'
-import './App.css';
+import { connectWallet, getTxUrl } from './web3Utils'
+import { sendRequestToBiconomy } from './biconomyService'
+import { getUnblockTokensData } from './contractsService'
+import './App.css'
 
 
 const App = () => {
-  const [approveRadio, setApproveRadio] = useState('SUN');
-  const [userWallet, setUserWallet] = useState();
-  const [walletLoading, isWalletLoading] = useState(false);
+  const [approveRadio, setApproveRadio] = useState('sun')
+  const [userWallet, setUserWallet] = useState()
+  const [walletLoading, isWalletLoading] = useState(false)
 
-  const _approveRadioChange = (event) => {
-    setApproveRadio(event.target.value);
-  }
+  useEffect(() => {
+    initWalletConnect()
+  }, [])
 
-  const handleApprove = () => {
-      // permit logic
-  }
-
-  const handleTransfer = () => {
-      // permit logic
-  }
-
-  const handleWalletConnect = () => {
+  const initWalletConnect = () => {
     // Show loading icon
     isWalletLoading(true)
 
     connectWallet()
-    .then(({ account }) => {
+    .then((account) => {
       setUserWallet(account)
     })
     .catch(error => {
@@ -53,6 +45,26 @@ const App = () => {
       // Hide loading icon
       isWalletLoading(false)
     })
+  }
+
+  const _approveRadioChange = (event) => {
+    setApproveRadio(event.target.value)
+  }
+
+  const handleApprove = async () => {
+    try {
+      const requestBody = await getUnblockTokensData(userWallet, approveRadio)
+      const txHash = await sendRequestToBiconomy(requestBody)
+      if (window.confirm('Sent. Do you want to check tx in Etherscan?')) {
+        window.open(getTxUrl(txHash), '_blank')
+      }
+    } catch (error) {
+      alert(error.message ? error.message : error)
+    }
+  }
+
+  const handleTransfer = () => {
+      // permit logic
   }
 
   return (
@@ -74,11 +86,11 @@ const App = () => {
                 <Typography variant="h4" color="textPrimary" gutterBottom>
                   Select Token
                 </Typography>
-                <form onSubmit={handleApprove}>
+                <form>
                   <FormControl component="fieldset" className="fieldset">
                     <RadioGroup aria-label="gender" name="gender1" value={approveRadio} onChange={_approveRadioChange}>
-                      <FormControlLabel value="SUN" control={<Radio />} label="SUN" />
-                      <FormControlLabel value="DAI" control={<Radio />} label="DAI" />
+                      <FormControlLabel value="sun" control={<Radio />} label="SUN" />
+                      <FormControlLabel value="dai" control={<Radio />} label="DAI" />
                       <FormControlLabel value="Other" control={<Radio />} label="Other" />
                     </RadioGroup>
 
@@ -86,7 +98,7 @@ const App = () => {
                       <TextField id="other-token" label="Token Address" />
                     )}
 
-                    <Button type="submit" variant="outlined" color="primary">
+                    <Button type="button" onClick={handleApprove} variant="outlined" color="primary">
                       Approve
                     </Button>
                   </FormControl>
@@ -119,19 +131,15 @@ const App = () => {
               <Typography variant="h4" color="textPrimary" gutterBottom>
                 Please connect your wallet
               </Typography>
-              {walletLoading ?
+              {walletLoading &&
                 <CircularProgress color="secondary" />
-                :
-                <Button variant="contained" color="secondary" onClick={handleWalletConnect}>
-                  Connect Wallet
-                </Button>
               }
             </CardContent>
           </Card>
         }
       </Container>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
