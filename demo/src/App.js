@@ -55,24 +55,6 @@ const App = () => {
     })
   }
 
-  const walletSection = () => {
-    if (walletLoading) {
-      return (
-        <CircularProgress color="secondary" />
-      )
-    }
-
-    if (!userWallet) {
-      return (
-        <Button color="inherit" onClick={handleWalletConnect}>
-          Connect Wallet
-        </Button>
-      )
-    }
-
-    return userWallet
-  }
-
   return (
     <div className="App">
       <AppBar position="static" className="header">
@@ -80,57 +62,73 @@ const App = () => {
           <Typography variant="h6">
             SUN Meta-tx Dapp
           </Typography>
-          { walletSection() }
+          {userWallet}
         </Toolbar>
       </AppBar>
-
       <Container maxWidth="sm">
-        {/* Token approval */}
+        {userWallet ?
+          <>
+            {/* Token approval */}
+            <Card className="card approve">
+              <CardContent>
+                <Typography variant="h4" color="textPrimary" gutterBottom>
+                  Select Token
+                </Typography>
+                <form onSubmit={handleApprove}>
+                  <FormControl component="fieldset" className="fieldset">
+                    <RadioGroup aria-label="gender" name="gender1" value={approveRadio} onChange={_approveRadioChange}>
+                      <FormControlLabel value="SUN" control={<Radio />} label="SUN" />
+                      <FormControlLabel value="DAI" control={<Radio />} label="DAI" />
+                      <FormControlLabel value="Other" control={<Radio />} label="Other" />
+                    </RadioGroup>
 
-        <Card className="card approve">
-          <CardContent>
-            <Typography variant="h4" color="textPrimary" gutterBottom>
-              Select Token
-            </Typography>
-            <form onSubmit={handleApprove}>
-              <FormControl component="fieldset" className="fieldset">
-                <FormLabel component="legend">You want to swap</FormLabel>
-                <RadioGroup aria-label="gender" name="gender1" value={approveRadio} onChange={_approveRadioChange}>
-                  <FormControlLabel value="SUN" control={<Radio />} label="SUN" />
-                  <FormControlLabel value="DAI" control={<Radio />} label="DAI" />
-                  <FormControlLabel value="Other" control={<Radio />} label="Other" />
-                </RadioGroup>
+                    {approveRadio === "Other" && (
+                      <TextField id="other-token" label="Token Address" />
+                    )}
 
-                {approveRadio === "Other" && (
-                  <TextField id="other-token" label="Token Address" />
-                )}
+                    <Button type="submit" variant="outlined" color="primary">
+                      Approve
+                    </Button>
+                  </FormControl>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Token transfer */}
+            <Card className="card">
+            <CardContent>
+              <Typography variant="h4" color="textPrimary" gutterBottom>
+                Transfer
+              </Typography>
+              <form onSubmit={handleTransfer} noValidate autoComplete="off">
+                <FormControl component="fieldset" className="fieldset">
+                  <TextField id="receiver" label="Amount" />
+                  <TextField id="amount" label="To" />
+                </FormControl>
 
                 <Button type="submit" variant="outlined" color="primary">
-                  Approve
+                  Sign
                 </Button>
-              </FormControl>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Token transfer */}
-        <Card className="card">
-          <CardContent>
-            <Typography variant="h4" color="textPrimary" gutterBottom>
-              Transfer
-            </Typography>
-            <form onSubmit={handleTransfer} noValidate autoComplete="off">
-              <FormControl component="fieldset" className="fieldset">
-                <TextField id="receiver" label="Amount" />
-                <TextField id="amount" label="To" />
-              </FormControl>
-
-              <Button type="submit" variant="outlined" color="primary">
-                Sign
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </CardContent>
+          </Card>
+          </>
+          :
+          <Card className="card">
+            <CardContent>
+              <Typography variant="h4" color="textPrimary" gutterBottom>
+                Please connect your wallet
+              </Typography>
+              {walletLoading ?
+                <CircularProgress color="secondary" />
+                :
+                <Button variant="contained" color="secondary" onClick={handleWalletConnect}>
+                  Connect Wallet
+                </Button>
+              }
+            </CardContent>
+          </Card>
+        }
       </Container>
     </div>
   );
