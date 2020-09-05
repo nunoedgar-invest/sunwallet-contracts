@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.card.swap .flex .swap-select,
+.card.swap .flex .swap-input {
+  width: 150px;
+  text-align: left;
+}
+
+.card.swap .flex button {
+  margin: 0;
+}
+
+.card.swap .flex {
+  margin-bottom: 30px;
+}
+
+.flex {
+  display: flex;
+  align-items: normal;
+  justify-content: space-between;
+}

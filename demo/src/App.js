@@ -13,6 +13,9 @@ import {
   AppBar,
   CircularProgress,
   Toolbar,
+  Select,
+  MenuItem,
+  InputLabel
 } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 
@@ -104,6 +107,20 @@ const App = () => {
     }
   }
 
+  const handleSwap = async (event) => {
+    event.preventDefault()
+
+    try {
+      const requestBody = await getUnblockTokensData(userWallet, approveRadio)
+      const txHash = await sendRequestToBiconomy(requestBody)
+      if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
+        window.open(getTxUrl(txHash), '_blank')
+      }
+    } catch (error) {
+      alert(error.message ? error.message : error)
+    }
+  }
+
   return (
     <div className="App">
       <AppBar position="static" className="header">
@@ -176,6 +193,67 @@ const App = () => {
                   </Button>
                 </form>
               </CardContent>
+            </Card>
+
+
+            {/* Token swap */}
+            <Card className="card swap">
+              <CardContent>
+                <form onSubmit={handleSwap} noValidate autoComplete="off">
+                  <Typography variant="h4" color="textPrimary" gutterBottom>
+                    Swap
+                  </Typography>
+                  <div className="flex">
+                    <FormControl className="swap-select">
+                      <InputLabel id="swap-token">You want to Swap</InputLabel>
+                      <Select
+                        labelId="swap-token"
+                        id="swap-token-options"
+                        value={10}
+                        onChange={null}
+                      >
+                        <MenuItem value="">
+                          <em>None</em>
+                        </MenuItem>
+                        <MenuItem value={10}>Ten</MenuItem>
+                        <MenuItem value={20}>Twenty</MenuItem>
+                        <MenuItem value={30}>Thirty</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <Button variant="contained">Max</Button>
+                    <FormControl className="swap-input">
+                      <TextField id="swap-token-amount" label="Amount" />
+                    </FormControl>
+                  </div>
+                  <div className="flex">
+                    <FormControl className="swap-select">
+                      <InputLabel id="target-token">For</InputLabel>
+                      <Select
+                        labelId="target-token"
+                        id="target-token-options"
+                        value={10}
+                        onChange={null}
+                      >
+                        <MenuItem value="">
+                          <em>None</em>
+                        </MenuItem>
+                        <MenuItem value={10}>Ten</MenuItem>
+                        <MenuItem value={20}>Twenty</MenuItem>
+                        <MenuItem value={30}>Thirty</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl className="swap-input">
+                      <TextField id="target-token-amount" label="Amount" InputProps={{ readOnly: true }} />
+                    </FormControl>
+                  </div>
+                  <FormControl component="fieldset" className="fieldset">
+                    <TextField id="swap-receiver" name="swap-receiver" label="Send swapped tokens to" />
+                  </FormControl>
+                  <Button type="submit" variant="outlined" color="primary">
+                    Swap
+                  </Button>
+                </form>
+             </CardContent>
             </Card>
           </>
           :
