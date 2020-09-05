@@ -146,7 +146,7 @@ const App = () => {
             }
 
             <Alert className="information-box" severity="info">
-              Required SUN tokens for meta-tx: <b>{requiredSunAmount} SUN</b> (Your have: <b>{userSunBalance} SUN</b>)
+              Required SUN tokens for meta-tx: <b>{requiredSunAmount}</b> (Your have: <b>{userSunBalance} SUN</b>)
             </Alert>
 
 

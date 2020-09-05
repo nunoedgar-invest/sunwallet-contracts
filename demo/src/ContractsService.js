@@ -52,6 +52,9 @@ const sendToSign = async (sender, message) => {
   }
 }
 
+const numberWithCommas = (number) => {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
 
 export const getUnblockTokensData = async (owner, tokenSymbol) => {
   try {
@@ -222,7 +225,7 @@ export const getRequiredSunAmount = async () => {
     )
 
     const amount = await routerInstance.methods.necessarySunCoins().call()
-    return window.web3.utils.fromWei(amount.toString(), 'ether')
+    return numberWithCommas(window.web3.utils.fromWei(amount.toString(), 'ether'))
   } catch (error) {
     throw error
   }
@@ -237,7 +240,7 @@ export const getUserSunBalance = async (user) => {
     )
 
     const amount = await tokenInstance.methods.balanceOf(user).call()
-    return window.web3.utils.fromWei(amount.toString(), 'ether')
+    return numberWithCommas(window.web3.utils.fromWei(amount.toString(), 'ether'))
   } catch (error) {
     throw error
   }
