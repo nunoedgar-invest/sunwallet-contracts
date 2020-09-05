@@ -161,7 +161,7 @@ export const getUnblockTokensData = async (owner, tokenSymbol) => {
 export const getTransferTokensData = async (owner, receiver, amount, tokenSymbol) => {
   try {
     const token = config[tokenSymbol]
-    const { name, version, abi, address, transferDappId } = config['router']
+    const { name, version, abi, address, dappId } = config['router']
     const routerInstance = new window.web3.eth.Contract(
       abi,
       address
@@ -194,15 +194,77 @@ export const getTransferTokensData = async (owner, receiver, amount, tokenSymbol
     })
 
     const { r, s, v } = await sendToSign(message.from, dataToSign)
-    console.log(
-      'v',v,
-      'r',r,
-      's',s
-    )
     const metaTxBody = {
       to: address,
       userAddress: message.from,
-      apiId: transferDappId,
+      apiId: dappId,
+      params: [
+        message.from,
+        functionSignature,
+        v, r, s
+      ],
+    }
+
+    return metaTxBody
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getSwapTokensData = async (owner, amount, amountsOutMin, inputTokenName, outputTokenName, to) => {
+  try {
+    const { name, version, abi, address, dappId } = config['router']
+    const routerInstance = new window.web3.eth.Contract(
+      abi,
+      address
+    )
+
+    const path = [
+      config[inputTokenName].address,
+      config[outputTokenName].address,
+    ]
+
+    const now = await getNow()
+    const deadline = now + 60 * 60
+
+    const nonce = await routerInstance.methods.nonces(owner).call()
+    const functionSignature = routerInstance.methods.swapExactTokensForTokens(
+      window.web3.utils.toWei(amount.toString(), 'ether'),
+      window.web3.utils.toWei(amountsOutMin.toString(), 'ether'),
+      path,
+      to,
+      deadline
+    ).encodeABI()
+
+    const message = {
+      'nonce': nonce,
+      'from': owner,
+      'functionSignature': functionSignature
+    }
+
+    const domainData = {
+      'name': name,
+      'verifyingContract': address,
+      'version': version,
+      'chainId': window.web3.currentProvider.networkVersion.toString()
+    }
+
+    const dataToSign = JSON.stringify({
+      'types': {
+          'EIP712Domain': domainType,
+          'MetaTransaction': metaTransactionType,
+      },
+      'domain': domainData,
+      'primaryType': 'MetaTransaction',
+      'message': message
+    })
+
+    const { r, s, v } = await sendToSign(message.from, dataToSign)
+
+    const metaTxBody = {
+      to: address,
+      userAddress: message.from,
+      apiId: dappId,
       params: [
         message.from,
         functionSignature,
@@ -231,9 +293,9 @@ export const getRequiredSunAmount = async () => {
   }
 }
 
-export const getUserSunBalance = async (user) => {
+export const getUserTokenBalance = async (user, tokenSymbol) => {
   try {
-    const { abi, address } = config['sun']
+    const { abi, address } = config[tokenSymbol]
     const tokenInstance = new window.web3.eth.Contract(
       abi,
       address
@@ -256,6 +318,29 @@ export const isUserBlocked = async (user) => {
 
     const isBlocked = await routerInstance.methods.senderBlocked(user).call()
     return isBlocked
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getAmountOut = async (inputAmount, inputTokenName, outputTokenName) => {
+  try {
+    const inputAmountWei = window.web3.utils.toWei(inputAmount.toString(), 'ether')
+
+    const { abi, address } = config['router']
+    const routerInstance = new window.web3.eth.Contract(
+      abi,
+      address
+    )
+
+    const path = [
+      config[inputTokenName].address,
+      config[outputTokenName].address,
+    ]
+
+    const amountsOut = await routerInstance.methods.getAmountsOut(inputAmountWei, path).call()
+    const outputString = amountsOut[1].toString()
+    return outputString
   } catch (error) {
     throw error
   }

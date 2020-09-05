@@ -25,14 +25,21 @@ import {
   getUnblockTokensData,
   getTransferTokensData,
   getRequiredSunAmount,
-  getUserSunBalance,
-  isUserBlocked
+  getUserTokenBalance,
+  isUserBlocked,
+  getSwapTokensData,
+  getAmountOut
 } from './contractsService'
 import './App.css'
 
 
 const App = () => {
   const [approveRadio, setApproveRadio] = useState('sun')
+  const [swapTokenSelect, setSwapTokenSelect] = useState('dai')
+  const [swapTargetTokenSelect, setSwapTargetTokenSelect] = useState('mkr')
+  const [swapReceiverWallet, setSwapReceiverWallet] = useState('')
+  const [swapTokenAmount, setSwapTokenAmount] = useState('')
+  const [swapTargetTokenAmount, setSwapTargetTokenAmount] = useState('')
   const [userWallet, setUserWallet] = useState()
   const [walletLoading, isWalletLoading] = useState(false)
   const [requiredSunAmount, setRequiredSunAmount] = useState()
@@ -43,6 +50,12 @@ const App = () => {
     initWalletConnect()
   }, [])
 
+  useEffect(() => {
+    if (swapTokenAmount) {
+      showAmountOut()
+    }
+  }, [swapTokenAmount])
+
   const initWalletConnect = () => {
     // Show loading icon
     isWalletLoading(true)
@@ -52,7 +65,7 @@ const App = () => {
       // Fetch user and contract data
       const promises = [
         isUserBlocked(account),
-        getUserSunBalance(account),
+        getUserTokenBalance(account, 'sun'),
         getRequiredSunAmount()
       ]
 
@@ -61,6 +74,7 @@ const App = () => {
         setUserSunBalance(userBalance)
         setRequiredSunAmount(requiredSunAmount)
         setUserWallet(account)
+        setSwapReceiverWallet(account)
       })
     })
     .catch(error => {
@@ -74,6 +88,29 @@ const App = () => {
 
   const _approveRadioChange = (event) => {
     setApproveRadio(event.target.value)
+  }
+
+  const _swapTokenChange = (event) => {
+    setSwapTokenSelect(event.target.value)
+  }
+
+  const _swapTargetTokenChange = (event) => {
+    setSwapTargetTokenSelect(event.target.value)
+  }
+
+  const getMaxBalance = () => {
+    getUserTokenBalance(userWallet, swapTokenSelect)
+    .then(amount => setSwapTokenAmount(amount))
+  }
+
+  const showAmountOut = async () => {
+    try {
+      const amount = await getAmountOut(swapTokenAmount, swapTokenSelect, swapTargetTokenSelect)
+      const ethAmount = window.web3.utils.fromWei(amount, 'ether')
+      setSwapTargetTokenAmount(ethAmount)
+    } catch (error) {
+      throw error
+    }
   }
 
   const handleApprove = async (event) => {
@@ -102,7 +139,6 @@ const App = () => {
         window.open(getTxUrl(txHash), '_blank')
       }
     } catch (error) {
-      console.log(error)
       alert(error.message ? error.message : error)
     }
   }
@@ -111,7 +147,7 @@ const App = () => {
     event.preventDefault()
 
     try {
-      const requestBody = await getUnblockTokensData(userWallet, approveRadio)
+      const requestBody = await getSwapTokensData(userWallet, swapTokenAmount, swapTargetTokenAmount, swapTokenSelect, swapTargetTokenSelect, swapReceiverWallet)
       const txHash = await sendRequestToBiconomy(requestBody)
       if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
         window.open(getTxUrl(txHash), '_blank')
@@ -158,7 +194,7 @@ const App = () => {
                 </Typography>
                 <form onSubmit={handleApprove}>
                   <FormControl component="fieldset" className="fieldset">
-                    <RadioGroup aria-label="gender" name="gender1" value={approveRadio} onChange={_approveRadioChange}>
+                    <RadioGroup value={approveRadio} onChange={_approveRadioChange}>
                       <FormControlLabel value="sun" control={<Radio />} label="SUN" />
                       <FormControlLabel value="dai" control={<Radio />} label="DAI" />
                       <FormControlLabel value="Other" control={<Radio />} label="Other" />
@@ -195,7 +231,6 @@ const App = () => {
               </CardContent>
             </Card>
 
-
             {/* Token swap */}
             <Card className="card swap">
               <CardContent>
@@ -209,20 +244,15 @@ const App = () => {
                       <Select
                         labelId="swap-token"
                         id="swap-token-options"
-                        value={10}
-                        onChange={null}
+                        value={swapTokenSelect}
+                        onChange={_swapTokenChange}
                       >
-                        <MenuItem value="">
-                          <em>None</em>
-                        </MenuItem>
-                        <MenuItem value={10}>Ten</MenuItem>
-                        <MenuItem value={20}>Twenty</MenuItem>
-                        <MenuItem value={30}>Thirty</MenuItem>
+                        <MenuItem value="dai">DAI</MenuItem>
                       </Select>
                     </FormControl>
-                    <Button variant="contained">Max</Button>
+                    <Button variant="contained" onClick={getMaxBalance}>Max</Button>
                     <FormControl className="swap-input">
-                      <TextField id="swap-token-amount" label="Amount" />
+                      <TextField id="swap-token-amount" label="Amount" type="number" onChange={event => setSwapTokenAmount(event.target.value)} value={swapTokenAmount} />
                     </FormControl>
                   </div>
                   <div className="flex">
@@ -231,23 +261,18 @@ const App = () => {
                       <Select
                         labelId="target-token"
                         id="target-token-options"
-                        value={10}
-                        onChange={null}
+                        value={swapTargetTokenSelect}
+                        onChange={_swapTargetTokenChange}
                       >
-                        <MenuItem value="">
-                          <em>None</em>
-                        </MenuItem>
-                        <MenuItem value={10}>Ten</MenuItem>
-                        <MenuItem value={20}>Twenty</MenuItem>
-                        <MenuItem value={30}>Thirty</MenuItem>
+                        <MenuItem value="mkr">MKR</MenuItem>
                       </Select>
                     </FormControl>
                     <FormControl className="swap-input">
-                      <TextField id="target-token-amount" label="Amount" InputProps={{ readOnly: true }} />
+                      <TextField id="target-token-amount" label="Amount" InputProps={{ readOnly: true }} value={swapTargetTokenAmount} />
                     </FormControl>
                   </div>
                   <FormControl component="fieldset" className="fieldset">
-                    <TextField id="swap-receiver" name="swap-receiver" label="Send swapped tokens to" />
+                    <TextField id="swap-receiver" name="swap-receiver" label="Send swapped tokens to" value={swapReceiverWallet} onChange={(event) => setSwapReceiverWallet(event.target.value)} />
                   </FormControl>
                   <Button type="submit" variant="outlined" color="primary">
                     Swap

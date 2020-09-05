@@ -17,12 +17,18 @@ export const config = {
     abi: daiAbi,
     dappId: '5b765421-fc7b-4493-a28d-105f96cef389'
   },
+  'mkr': {
+    name: 'Maker',
+    symbol: 'mkr',
+    address: '0xF9bA5210F91D0474bd1e1DcDAeC4C58E359AaD85',
+    abi: sunAbi,
+  },
   'router': {
     name: 'Sun coin proxy',
     version: '1',
     address: '0x9DAb71186E6693388C4863eA364347Cf47F96d0a',
     abi: routerAbi,
-    transferDappId: '38ffbafe-efa7-4752-9455-bb868be36c9f'
+    dappId: '38ffbafe-efa7-4752-9455-bb868be36c9f'
   }
 }
 
