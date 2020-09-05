@@ -3,7 +3,8 @@ const {
   MAX_UINT,
   domainType,
   permitType,
-  daiPermitType
+  daiPermitType,
+  metaTransactionType,
 } = require('./config')
 
 const getNow = async () => {
@@ -147,6 +148,64 @@ export const getUnblockTokensData = async (owner, tokenSymbol) => {
       }
     }
 
+
+    return metaTxBody
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getTransferTokensData = async (owner, receiver, amount, tokenSymbol) => {
+  try {
+    const token = config[tokenSymbol]
+    const { name, version, abi, address, transferDappId } = config['router']
+    const routerInstance = new window.web3.eth.Contract(
+      abi,
+      address
+    )
+
+    const nonce = await routerInstance.methods.nonces(owner).call()
+    const functionSignature = routerInstance.methods.tokenTransfer(receiver, amount, token.address).encodeABI()
+
+    const message = {
+      'nonce': nonce,
+      'from': owner,
+      'functionSignature': functionSignature
+    }
+
+    const domainData = {
+      'name': name,
+      'verifyingContract': address,
+      'version': version,
+      'chainId': window.web3.currentProvider.networkVersion.toString()
+    }
+
+    const dataToSign = JSON.stringify({
+      'types': {
+          'EIP712Domain': domainType,
+          'MetaTransaction': metaTransactionType,
+      },
+      'domain': domainData,
+      'primaryType': 'MetaTransaction',
+      'message': message
+    })
+
+    const { r, s, v } = await sendToSign(message.from, dataToSign)
+    console.log(
+      'v',v,
+      'r',r,
+      's',s
+    )
+    const metaTxBody = {
+      to: address,
+      userAddress: message.from,
+      apiId: transferDappId,
+      params: [
+        message.from,
+        functionSignature,
+        v, r, s
+      ],
+    }
 
     return metaTxBody
   } catch (error) {

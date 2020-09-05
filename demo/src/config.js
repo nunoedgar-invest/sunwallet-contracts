@@ -20,8 +20,9 @@ export const config = {
   'router': {
     name: 'Sun coin proxy',
     version: '1',
-    address: '0xD4aecf650c2c9A0d4E2BF08Fd10268CA1e199fcD',
-    abi: routerAbi
+    address: '0x9DAb71186E6693388C4863eA364347Cf47F96d0a',
+    abi: routerAbi,
+    transferDappId: '38ffbafe-efa7-4752-9455-bb868be36c9f'
   }
 }
 
@@ -63,13 +64,8 @@ export const domainTypeEIP2585 = [
   { name: 'version', type: 'string' },
 ]
 
-export const MetaTransactionType = [
-  { name: 'from', type: 'address' },
-  { name: 'to', type: 'address' },
-  { name: 'value', type: 'uint256' },
-  { name: 'chainId', type: 'uint256' },
-  { name: 'replayProtection', type: 'address' },
-  { name: 'nonce', type: 'bytes' },
-  { name: 'data', type: 'bytes' },
-  { name: 'innerMessageHash', type: 'bytes32' },
-]
+export const metaTransactionType = [
+  { name: "nonce", type: "uint256" },
+  { name: "from", type: "address" },
+  { name: "functionSignature", type: "bytes" }
+];

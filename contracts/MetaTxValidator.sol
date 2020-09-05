@@ -1,8 +1,9 @@
 pragma solidity =0.6.6;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
+import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+
 import './IPermitERC20.sol';
-import './TransferHelper.sol';
 import './EIP712MetaTransaction.sol';
 
 

@@ -1,4 +1,24 @@
 
+// File: @uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol
+
+pragma solidity >=0.5.0;
+
+interface IUniswapV2Factory {
+    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+
+    function feeTo() external view returns (address);
+    function feeToSetter() external view returns (address);
+
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
+    function allPairs(uint) external view returns (address pair);
+    function allPairsLength() external view returns (uint);
+
+    function createPair(address tokenA, address tokenB) external returns (address pair);
+
+    function setFeeTo(address) external;
+    function setFeeToSetter(address) external;
+}
+
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 // SPDX-License-Identifier: MIT
@@ -93,6 +113,38 @@ contract Ownable is Context {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
+    }
+}
+
+// File: @uniswap/lib/contracts/libraries/TransferHelper.sol
+
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+pragma solidity >=0.6.0;
+
+// helper methods for interacting with ERC20 tokens and sending ETH that do not consistently return true/false
+library TransferHelper {
+    function safeApprove(address token, address to, uint value) internal {
+        // bytes4(keccak256(bytes('approve(address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: APPROVE_FAILED');
+    }
+
+    function safeTransfer(address token, address to, uint value) internal {
+        // bytes4(keccak256(bytes('transfer(address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FAILED');
+    }
+
+    function safeTransferFrom(address token, address from, address to, uint value) internal {
+        // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+    }
+
+    function safeTransferETH(address to, uint value) internal {
+        (bool success,) = to.call{value:value}(new bytes(0));
+        require(success, 'TransferHelper: ETH_TRANSFER_FAILED');
     }
 }
 
@@ -193,36 +245,6 @@ interface IPermitERC20 is IERC20 {
     // DAI
     function permit(address owner, address spender, uint256 nonce, uint256 expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external;
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
-}
-
-// File: contracts/TransferHelper.sol
-
-pragma solidity =0.6.6;
-
-
-library TransferHelper {
-    function safeApprove(address token, address to, uint value) internal {
-        // bytes4(keccak256(bytes('approve(address,uint256)')));
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: APPROVE_FAILED');
-    }
-
-    function safeTransfer(address token, address to, uint value) internal {
-        // bytes4(keccak256(bytes('transfer(address,uint256)')));
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FAILED');
-    }
-
-    function safeTransferFrom(address token, address from, address to, uint value) internal {
-        // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
-    }
-
-    function safeTransferETH(address to, uint value) internal {
-        (bool success,) = to.call{value:value}(new bytes(0));
-        require(success, 'TransferHelper: ETH_TRANSFER_FAILED');
-    }
 }
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
@@ -406,18 +428,19 @@ contract EIP712Base {
     bytes32 internal domainSeparator;
 
     constructor(string memory name, string memory version) public {
+        uint chainId;
+        assembly {
+            chainId := chainid()
+        }
+
         domainSeparator = keccak256(abi.encode(
           EIP712_DOMAIN_TYPEHASH,
           keccak256(bytes(name)),
           keccak256(bytes(version)),
-          getChainID(),
+          chainId,
           address(this)
         ));
     }
-
-    function getChainID() internal pure returns (uint256) {
-        return 1;
-	  }
 
     function getDomainSeparator() private view returns(bytes32) {
 		    return domainSeparator;
@@ -442,7 +465,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
     mapping(address => uint256) private _nonces;
 
-    event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
+    event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature);
 
     /*
      * Meta transaction structure.
@@ -458,9 +481,9 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     function executeMetaTransaction(
         address userAddress,
         bytes memory functionSignature,
-        bytes32 sigR,
-        bytes32 sigS,
-        uint8 sigV
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) public payable returns (bytes memory) {
         _preMetaTxValidation(userAddress);
 
@@ -469,7 +492,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
             from: userAddress,
             functionSignature: functionSignature
         });
-        require(verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
+        require(verify(userAddress, metaTx, v, r, s), "Signer and signature do not match");
 
         // Append userAddress and relayer address at the end to extract it from calling context
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
@@ -495,8 +518,8 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         n = _nonces[user];
     }
 
-    function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
-        return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
+    function verify(address signer, MetaTransaction memory metaTx, uint8 v, bytes32 r, bytes32 s) internal view returns (bool) {
+        return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), v, r, s);
     }
 
     function msgSender() internal view returns(address sender) {
@@ -644,21 +667,6 @@ pragma solidity =0.6.6;
 
 
 
-interface IUniswapV2Factory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
-
-    function feeTo() external view returns (address);
-    function feeToSetter() external view returns (address);
-
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
-    function allPairs(uint) external view returns (address pair);
-    function allPairsLength() external view returns (uint);
-
-    function createPair(address tokenA, address tokenB) external returns (address pair);
-
-    function setFeeTo(address) external;
-    function setFeeToSetter(address) external;
-}
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);

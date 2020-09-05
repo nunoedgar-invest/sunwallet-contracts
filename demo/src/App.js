@@ -17,7 +17,10 @@ import {
 
 import { connectWallet, getTxUrl } from './web3Utils'
 import { sendRequestToBiconomy } from './biconomyService'
-import { getUnblockTokensData } from './contractsService'
+import {
+  getUnblockTokensData,
+  getTransferTokensData
+} from './contractsService'
 import './App.css'
 
 
@@ -51,11 +54,13 @@ const App = () => {
     setApproveRadio(event.target.value)
   }
 
-  const handleApprove = async () => {
+  const handleApprove = async (event) => {
+    event.preventDefault()
+
     try {
       const requestBody = await getUnblockTokensData(userWallet, approveRadio)
       const txHash = await sendRequestToBiconomy(requestBody)
-      if (window.confirm('Sent. Do you want to check tx in Etherscan?')) {
+      if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
         window.open(getTxUrl(txHash), '_blank')
       }
     } catch (error) {
@@ -63,8 +68,21 @@ const App = () => {
     }
   }
 
-  const handleTransfer = () => {
-      // permit logic
+  const handleTransfer = async (event) => {
+    event.preventDefault()
+
+    try {
+      const amount = event.target.elements.amount.value
+      const receiver = event.target.elements.receiver.value
+      const requestBody = await getTransferTokensData(userWallet, receiver, amount, approveRadio)
+      const txHash = await sendRequestToBiconomy(requestBody)
+      if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
+        window.open(getTxUrl(txHash), '_blank')
+      }
+    } catch (error) {
+      console.log(error)
+      alert(error.message ? error.message : error)
+    }
   }
 
   return (
@@ -86,7 +104,7 @@ const App = () => {
                 <Typography variant="h4" color="textPrimary" gutterBottom>
                   Select Token
                 </Typography>
-                <form>
+                <form onSubmit={handleApprove}>
                   <FormControl component="fieldset" className="fieldset">
                     <RadioGroup aria-label="gender" name="gender1" value={approveRadio} onChange={_approveRadioChange}>
                       <FormControlLabel value="sun" control={<Radio />} label="SUN" />
@@ -98,7 +116,7 @@ const App = () => {
                       <TextField id="other-token" label="Token Address" />
                     )}
 
-                    <Button type="button" onClick={handleApprove} variant="outlined" color="primary">
+                    <Button type="submit" variant="outlined" color="primary">
                       Approve
                     </Button>
                   </FormControl>
@@ -114,8 +132,8 @@ const App = () => {
               </Typography>
               <form onSubmit={handleTransfer} noValidate autoComplete="off">
                 <FormControl component="fieldset" className="fieldset">
-                  <TextField id="receiver" label="Amount" />
-                  <TextField id="amount" label="To" />
+                  <TextField id="receiver" name="receiver" label="To" />
+                  <TextField id="amount" name="amount" label="Amount" />
                 </FormControl>
 
                 <Button type="submit" variant="outlined" color="primary">

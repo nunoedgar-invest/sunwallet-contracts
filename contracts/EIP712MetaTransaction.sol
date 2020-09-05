@@ -16,18 +16,19 @@ contract EIP712Base {
     bytes32 internal domainSeparator;
 
     constructor(string memory name, string memory version) public {
+        uint chainId;
+        assembly {
+            chainId := chainid()
+        }
+
         domainSeparator = keccak256(abi.encode(
           EIP712_DOMAIN_TYPEHASH,
           keccak256(bytes(name)),
           keccak256(bytes(version)),
-          getChainID(),
+          chainId,
           address(this)
         ));
     }
-
-    function getChainID() internal pure returns (uint256) {
-        return 1;
-	  }
 
     function getDomainSeparator() private view returns(bytes32) {
 		    return domainSeparator;
@@ -52,7 +53,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
     mapping(address => uint256) private _nonces;
 
-    event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
+    event MetaTransactionExecuted(address userAddress, address relayerAddress, bytes functionSignature);
 
     /*
      * Meta transaction structure.
@@ -68,9 +69,9 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
     function executeMetaTransaction(
         address userAddress,
         bytes memory functionSignature,
-        bytes32 sigR,
-        bytes32 sigS,
-        uint8 sigV
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) public payable returns (bytes memory) {
         _preMetaTxValidation(userAddress);
 
@@ -79,7 +80,7 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
             from: userAddress,
             functionSignature: functionSignature
         });
-        require(verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
+        require(verify(userAddress, metaTx, v, r, s), "Signer and signature do not match");
 
         // Append userAddress and relayer address at the end to extract it from calling context
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
@@ -105,8 +106,8 @@ contract EIP712MetaTransaction is EIP712Base('Sun coin proxy', '1') {
         n = _nonces[user];
     }
 
-    function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
-        return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
+    function verify(address signer, MetaTransaction memory metaTx, uint8 v, bytes32 r, bytes32 s) internal view returns (bool) {
+        return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), v, r, s);
     }
 
     function msgSender() internal view returns(address sender) {
