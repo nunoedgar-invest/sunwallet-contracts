@@ -42,7 +42,6 @@ export const getTxUrl = (txHash) => {
   switch (chainId) {
     case '4':
       return `https://rinkeby.etherscan.io/tx/${txHash}`
-      break;
 
     default:
       break;

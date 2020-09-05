@@ -92,10 +92,6 @@ const App = () => {
     setApproveRadio(event.target.value)
   }
 
-  const _swapTokenChange = (event) => {
-    setSwapTokenSelect(event.target.value)
-  }
-
   const getMaxBalance = () => {
     getUserTokenBalance(userWallet, swapTokenSelect)
     .then(amount => setSwapTokenAmount(amount.split(',').join('')))
