@@ -23,6 +23,12 @@ export const config = {
     address: '0xF9bA5210F91D0474bd1e1DcDAeC4C58E359AaD85',
     abi: sunAbi,
   },
+  'weth': {
+    name: 'Wrapped Ether',
+    symbol: 'WETH',
+    address: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
+    abi: sunAbi,
+  },
   'router': {
     name: 'Sun coin proxy',
     version: '1',

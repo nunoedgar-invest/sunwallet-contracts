@@ -35,7 +35,7 @@ import './App.css'
 
 const App = () => {
   const [approveRadio, setApproveRadio] = useState('sun')
-  const [swapTokenSelect, setSwapTokenSelect] = useState('dai')
+  const [swapTokenSelect, setSwapTokenSelect] = useState('sun')
   const [swapTargetTokenSelect, setSwapTargetTokenSelect] = useState('mkr')
   const [swapReceiverWallet, setSwapReceiverWallet] = useState('')
   const [swapTokenAmount, setSwapTokenAmount] = useState('')
@@ -51,10 +51,12 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    if (swapTokenAmount) {
+    if (swapTokenAmount && Number(swapTokenAmount) > 0) {
       showAmountOut()
+    } else {
+      setSwapTargetTokenAmount('')
     }
-  }, [swapTokenAmount])
+  }, [swapTokenAmount, swapTargetTokenSelect])
 
   const initWalletConnect = () => {
     // Show loading icon
@@ -94,13 +96,9 @@ const App = () => {
     setSwapTokenSelect(event.target.value)
   }
 
-  const _swapTargetTokenChange = (event) => {
-    setSwapTargetTokenSelect(event.target.value)
-  }
-
   const getMaxBalance = () => {
     getUserTokenBalance(userWallet, swapTokenSelect)
-    .then(amount => setSwapTokenAmount(amount))
+    .then(amount => setSwapTokenAmount(amount.split(',').join('')))
   }
 
   const showAmountOut = async () => {
@@ -109,7 +107,7 @@ const App = () => {
       const ethAmount = window.web3.utils.fromWei(amount, 'ether')
       setSwapTargetTokenAmount(ethAmount)
     } catch (error) {
-      throw error
+      alert('Selected pair does not exist.')
     }
   }
 
@@ -181,11 +179,6 @@ const App = () => {
               )
             }
 
-            <Alert className="information-box" severity="info">
-              Required SUN tokens for meta-tx: <b>{requiredSunAmount}</b> (Your have: <b>{userSunBalance} SUN</b>)
-            </Alert>
-
-
             {/* Token approval */}
             <Card className="card approve">
               <CardContent>
@@ -211,6 +204,10 @@ const App = () => {
                 </form>
               </CardContent>
             </Card>
+
+            <Alert className="information-box" severity="info">
+              Required SUN tokens for meta-tx: <b>{requiredSunAmount}</b> (Your have: <b>{userSunBalance} SUN</b>)
+            </Alert>
 
             {/* Token transfer */}
             <Card className="card">
@@ -245,9 +242,10 @@ const App = () => {
                         labelId="swap-token"
                         id="swap-token-options"
                         value={swapTokenSelect}
-                        onChange={_swapTokenChange}
+                        onChange={event => setSwapTokenSelect(event.target.value)}
                       >
-                        <MenuItem value="dai">DAI</MenuItem>
+                        <MenuItem value={"sun"}>SUN</MenuItem>
+                        <MenuItem value={"dai"}>DAI</MenuItem>
                       </Select>
                     </FormControl>
                     <Button variant="contained" onClick={getMaxBalance}>Max</Button>
@@ -262,9 +260,11 @@ const App = () => {
                         labelId="target-token"
                         id="target-token-options"
                         value={swapTargetTokenSelect}
-                        onChange={_swapTargetTokenChange}
+                        onChange={event => setSwapTargetTokenSelect(event.target.value)}
                       >
-                        <MenuItem value="mkr">MKR</MenuItem>
+                        <MenuItem value={"mkr"}>MKR</MenuItem>
+                        <MenuItem value={"dai"}>DAI</MenuItem>
+                        <MenuItem value={"weth"}>WETH</MenuItem>
                       </Select>
                     </FormControl>
                     <FormControl className="swap-input">
