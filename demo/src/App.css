@@ -1,6 +1,9 @@
-.App {
+body {
   background-color: #282c34;
   min-height: 100vh;
+}
+
+.App {
   text-align: center;
 }
 
@@ -47,4 +50,8 @@
 .flex-space-between {
   display: flex;
   justify-content: space-between;
+}
+
+.information-box {
+  margin-bottom: 30px;
 }

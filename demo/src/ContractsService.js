@@ -212,3 +212,48 @@ export const getTransferTokensData = async (owner, receiver, amount, tokenSymbol
     throw error
   }
 }
+
+export const getRequiredSunAmount = async () => {
+  try {
+    const { abi, address } = config['router']
+    const routerInstance = new window.web3.eth.Contract(
+      abi,
+      address
+    )
+
+    const amount = await routerInstance.methods.necessarySunCoins().call()
+    return window.web3.utils.fromWei(amount.toString(), 'ether')
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getUserSunBalance = async (user) => {
+  try {
+    const { abi, address } = config['sun']
+    const tokenInstance = new window.web3.eth.Contract(
+      abi,
+      address
+    )
+
+    const amount = await tokenInstance.methods.balanceOf(user).call()
+    return window.web3.utils.fromWei(amount.toString(), 'ether')
+  } catch (error) {
+    throw error
+  }
+}
+
+export const isUserBlocked = async (user) => {
+  try {
+    const { abi, address } = config['router']
+    const routerInstance = new window.web3.eth.Contract(
+      abi,
+      address
+    )
+
+    const isBlocked = await routerInstance.methods.senderBlocked(user).call()
+    return isBlocked
+  } catch (error) {
+    throw error
+  }
+}

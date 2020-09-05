@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.0",
+    "@material-ui/lab": "^4.0.0-alpha.56",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
@@ -11,10 +12,8 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
+    "@biconomy/mexa": "^1.5.7",
     "web3": "^1.2.6"
-  },
-  "devDependencies": {
-    "@biconomy/mexa": "^1.5.7"
   },
   "scripts": {
     "start": "react-scripts start",

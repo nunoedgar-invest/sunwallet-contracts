@@ -14,12 +14,16 @@ import {
   CircularProgress,
   Toolbar,
 } from '@material-ui/core'
+import { Alert } from '@material-ui/lab'
 
 import { connectWallet, getTxUrl } from './web3Utils'
 import { sendRequestToBiconomy } from './biconomyService'
 import {
   getUnblockTokensData,
-  getTransferTokensData
+  getTransferTokensData,
+  getRequiredSunAmount,
+  getUserSunBalance,
+  isUserBlocked
 } from './contractsService'
 import './App.css'
 
@@ -28,6 +32,9 @@ const App = () => {
   const [approveRadio, setApproveRadio] = useState('sun')
   const [userWallet, setUserWallet] = useState()
   const [walletLoading, isWalletLoading] = useState(false)
+  const [requiredSunAmount, setRequiredSunAmount] = useState()
+  const [userSunBalance, setUserSunBalance] = useState()
+  const [userBlocked, setUserBlocked] = useState()
 
   useEffect(() => {
     initWalletConnect()
@@ -39,7 +46,19 @@ const App = () => {
 
     connectWallet()
     .then((account) => {
-      setUserWallet(account)
+      // Fetch user and contract data
+      const promises = [
+        isUserBlocked(account),
+        getUserSunBalance(account),
+        getRequiredSunAmount()
+      ]
+
+      return Promise.all(promises).then(([blocked, userBalance, requiredSunAmount]) => {
+        setUserBlocked(blocked)
+        setUserSunBalance(userBalance)
+        setRequiredSunAmount(requiredSunAmount)
+        setUserWallet(account)
+      })
     })
     .catch(error => {
       alert(error.message)
@@ -98,6 +117,22 @@ const App = () => {
       <Container maxWidth="sm">
         {userWallet ?
           <>
+            {userBlocked ? (
+                <Alert className="information-box" severity="error">
+                  Your wallet is Blocked!
+                </Alert>
+              ) : (
+                <Alert className="information-box" severity="success">
+                  Your account is not blocked.
+                </Alert>
+              )
+            }
+
+            <Alert className="information-box" severity="info">
+              Required SUN tokens for meta-tx: <b>{requiredSunAmount} SUN</b> (Your have: <b>{userSunBalance} SUN</b>)
+            </Alert>
+
+
             {/* Token approval */}
             <Card className="card approve">
               <CardContent>
@@ -126,22 +161,22 @@ const App = () => {
 
             {/* Token transfer */}
             <Card className="card">
-            <CardContent>
-              <Typography variant="h4" color="textPrimary" gutterBottom>
-                Transfer
-              </Typography>
-              <form onSubmit={handleTransfer} noValidate autoComplete="off">
-                <FormControl component="fieldset" className="fieldset">
-                  <TextField id="receiver" name="receiver" label="To" />
-                  <TextField id="amount" name="amount" label="Amount" />
-                </FormControl>
+              <CardContent>
+                <Typography variant="h4" color="textPrimary" gutterBottom>
+                  Transfer
+                </Typography>
+                <form onSubmit={handleTransfer} noValidate autoComplete="off">
+                  <FormControl component="fieldset" className="fieldset">
+                    <TextField id="receiver" name="receiver" label="To" />
+                    <TextField id="amount" name="amount" label="Amount" />
+                  </FormControl>
 
-                <Button type="submit" variant="outlined" color="primary">
-                  Sign
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                  <Button type="submit" variant="outlined" color="primary">
+                    Sign
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </>
           :
           <Card className="card">
