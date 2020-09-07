@@ -28,6 +28,7 @@ import {
   getUserTokenBalance,
   isUserBlocked,
   getSwapTokensData,
+  approveNonMetaTokens,
   getAmountOut
 } from './contractsService'
 import './App.css'
@@ -111,11 +112,25 @@ const App = () => {
     event.preventDefault()
 
     try {
-      const requestBody = await getUnblockTokensData(userWallet, approveRadio)
-      const txHash = await sendRequestToBiconomy(requestBody)
-      if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
-        window.open(getTxUrl(txHash), '_blank')
+      if (approveRadio === 'other') {
+        const otherTokenAddress = event.target.elements.otherToken.value
+        if (!otherTokenAddress) throw { message: 'Empty token address '}
+
+        approveNonMetaTokens(userWallet, otherTokenAddress)
+        .on('transactionHash', txHash => {
+          if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
+            window.open(getTxUrl(txHash), '_blank')
+          }
+        })
+      } else {
+        const requestBody = await getUnblockTokensData(userWallet, approveRadio)
+        const txHash = await sendRequestToBiconomy(requestBody)
+
+        if (window.confirm('Sent!\n\nCheck transaction on Etherscan?')) {
+          window.open(getTxUrl(txHash), '_blank')
+        }
       }
+
     } catch (error) {
       alert(error.message ? error.message : error)
     }
@@ -186,11 +201,11 @@ const App = () => {
                     <RadioGroup value={approveRadio} onChange={_approveRadioChange}>
                       <FormControlLabel value="sun" control={<Radio />} label="SUN" />
                       <FormControlLabel value="dai" control={<Radio />} label="DAI" />
-                      <FormControlLabel value="Other" control={<Radio />} label="Other" />
+                      <FormControlLabel value="other" control={<Radio />} label="Other" />
                     </RadioGroup>
 
-                    {approveRadio === "Other" && (
-                      <TextField id="other-token" label="Token Address" />
+                    {approveRadio === "other" && (
+                      <TextField id="other-token" name="otherToken" label="Token Address" />
                     )}
 
                     <Button type="submit" variant="outlined" color="primary">

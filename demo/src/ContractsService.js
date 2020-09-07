@@ -158,6 +158,21 @@ export const getUnblockTokensData = async (owner, tokenSymbol) => {
   }
 }
 
+export const approveNonMetaTokens = (owner, tokenAddress) => {
+  try {
+    const { abi } = config['sun'] // Just an example ABI which supports approve method
+    const { address } = config['router']
+    const tokenInstance = new window.web3.eth.Contract(
+      abi,
+      tokenAddress
+    )
+
+    return tokenInstance.methods.approve(address, MAX_UINT).send({ from: owner })
+  } catch (error) {
+    throw error
+  }
+}
+
 export const getTransferTokensData = async (owner, receiver, amount, tokenSymbol) => {
   try {
     const token = config[tokenSymbol]
