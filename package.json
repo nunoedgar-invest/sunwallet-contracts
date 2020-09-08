@@ -11,6 +11,7 @@
     "compile": "truffle compile",
     "migrate": "truffle migrate",
     "deploy:rinkeby": "truffle deploy --network rinkeby",
+    "ganache": "ganache-cli --gas-price 0 -a 30 -i 5 --mnemonic genre dress knee lounge expose flash cute valid hard define box outdoor",
     "flat": "truffle-flattener contracts/UniswapV2Router02.sol > flat/UniswapV2Router02.sol && truffle-flattener contracts/SunCoin.sol > flat/SunCoin.sol"
   },
   "repository": {
@@ -43,6 +44,7 @@
     "@truffle/hdwallet-provider": "^1.0.43",
     "@uniswap/lib": "^1.1.4",
     "@uniswap/v2-core": "^1.0.1",
+    "assert": "^2.0.0",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
     "openzeppelin-test-helpers": "^0.5.1",
