@@ -12,7 +12,7 @@
     "migrate": "truffle migrate",
     "deploy:rinkeby": "truffle deploy --network rinkeby",
     "ganache": "ganache-cli --gas-price 0 -a 30 -i 5 --mnemonic genre dress knee lounge expose flash cute valid hard define box outdoor",
-    "flat": "truffle-flattener contracts/UniswapV2Router02.sol > flat/UniswapV2Router02.sol && truffle-flattener contracts/SunCoin.sol > flat/SunCoin.sol"
+    "flat": "truffle-flattener contracts/UniswapV2Router02.sol > flat/UniswapV2Router02.sol && truffle-flattener contracts/SunCoin.sol > flat/SunCoin.sol && truffle-flattener contracts/TokenVesting.sol > flat/TokenVesting.sol"
   },
   "repository": {
     "type": "git",
